@@ -41,22 +41,6 @@ SocketBase::~SocketBase ()
     terminate();
 }
 
-#if 0
-/**
- * @brief     Comprobar si el socket es válido
- */
-bool SocketBase::isValid ()
-{
-    if (hsock_ != INVALID_HANDLER)
-    {
-        if (inode_ == getInode())
-            return true;
-        invalidate();                                       // Si el inodo cambió, el socket ya no es válido.
-    }
-    return false;
-}
-#endif
-
 /**
  * @brief     Read data from the socket
  */
@@ -210,7 +194,7 @@ void SocketBase::setBufferLength (BufferTypes bufType, int buflen)
 }
 
 /**
- * @brief   Set general i/o blocking mode
+ * @brief     Set general i/o blocking mode
  */
 void SocketBase::setIomode(IoModes iomode)
 {
@@ -222,10 +206,6 @@ void SocketBase::setIomode(IoModes iomode)
         flags |= O_NONBLOCK;
     fcntl(hsock_, F_SETFL, flags);
 }
-
-/** ----------------------------------------------------
- * @brief     Class SocketBase: Protected functions
- * ------ */
 
 /**
  * @brief     Close and shutdown the socket.
@@ -269,10 +249,6 @@ void SocketBase::invalidate ()
     hsock_ = INVALID_HANDLER;
     inode_ = 0;
 }
-
-/** ----------------------------------------------------
- * @brief     Class SocketBase: Friend functions
- * ------ */
 
 /**
  * @brief     Wait for an event on any of the sockets provided.

@@ -8,8 +8,8 @@
  * Please read the file LICENSE for further details.
  */
 
-#ifndef _SOCKET_BASE_H_
-#define _SOCKET_BASE_H_
+#ifndef _LIBSOCKET_SOCKET_BASE_H_
+#define _LIBSOCKET_SOCKET_BASE_H_
 
 #include <sys/poll.h>                                   // POLLIN, POLLOUT
 #include <sys/socket.h>                                 // SO_SNDBUF, SO_RCVBUF
@@ -121,14 +121,6 @@ public:
      */
     ~SocketBase ();
 
-#if 0
-    /**
-     * @brief   Check socket validity
-     */
-    bool                                                  /** @return true: socket is valid \n false: invalid socket */
-    isValid ();
-#endif
-
     /**
      * @brief   Read data from the socket.
      * @details If timeout == DONT_WAIT, the function reads any data pending in the input buffer and returns immediately.
@@ -226,6 +218,8 @@ public:
     );
 
 protected:
+    struct HandleSocket { int hf; };                    //!< Rename the socket handler type to do overloading by handle type.
+
     enum
     {
         INVALID_HANDLER = -1,                           //!< Value of invalid socket handler
@@ -237,8 +231,8 @@ protected:
      * @note    To be used only by derived classes when a new socket is created (f.i. by accept())
      */
     SocketBase (
-        int hs                                          //!< Socket handler
-    )   : hsock_(hs), inode_(getInode()) {};
+        HandleSocket hs                                 //!< Socket handler
+    )   : hsock_(hs.hf), inode_(getInode()) {};
 
     /**
      * @brief   Constructor with family and protocol.
@@ -276,11 +270,10 @@ protected:
     void
     invalidate ();
 
-
-    int   hsock_;                                       //!< Socket handler
-    ino_t inode_;                                       //!< Socket inode
+    int    hsock_;                                      //!< Socket handler
+    ino_t  inode_;                                      //!< Socket inode
 };
 
 } // namespace
 
-#endif  // _SOCKET_BASE_H_
+#endif  // _LIBSOCKET_SOCKET_BASE_H_

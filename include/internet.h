@@ -8,13 +8,14 @@
  * Please read the file LICENSE for further details.
  */
 
-#ifndef _SOCKET_INTERNET_H_
-#define _SOCKET_INTERNET_H_
+#ifndef _LIBSOCKET_INET_INTERNET_H_
+#define _LIBSOCKET_INET_INTERNET_H_
 
 #include "socket_base.h"
 #include <netinet/in.h>                                 // sockaddr_in, in_addr_t
 #include <string>
 #include <stdexcept>
+#include <memory>                                       // std::shared_ptr
 
 namespace libSocket { namespace inet {
 
@@ -93,8 +94,16 @@ public:
 
 protected:
     /**
+     * @brief   Constructor with handler
+     * @details To be used by derived classes only.
+     */
+    InetBase (
+        HandleSocket hs
+    )   : SocketBase(hs) {};
+
+    /**
      * @brief   Constructor specifying protocol.
-     * @details To be used by the derived classes.
+     * @details To be used by derived classes only.
      */
     InetBase (
         int protocol                                    //!< Internet protocol of the socket.
@@ -102,24 +111,24 @@ protected:
 };
 
 /** ----------------------------------------------------
- * @brief   Class Datagram: Internet Datagram (UDP) sockets.
+ * @brief   Class DatagramSock: Internet Datagram (UDP) sockets.
  * @details Unique class for clients and servers.
  * ------ */
-class Datagram : public InetBase
+class DatagramSock : public InetBase
 {
 public:
     /**
      * @brief   Client constructor. Create a socket with no connection.
      * @details Use this constructor to create a client socket.
      */
-    Datagram ()
+    DatagramSock ()
         : InetBase(SOCK_DGRAM) {};
 
     /**
      * @brief   Server constructor. Create a socket and bind it to a local interface and local port.
      * @throws  std::system_error if the binding fails.
      */
-    Datagram (
+    DatagramSock (
         const Address& address                          //!< Network address to which the socket will connect.
     );
 
@@ -193,14 +202,14 @@ protected:
 /** ----------------------------------------------------
  * @brief   Class Multicast: Multicast UDP sockets.
  * ------ */
-class Multicast : public Datagram
+class MulticastSock : public DatagramSock
 {
 public:
     /**
      * @brief   Constructor. Only default constructor allowed.
      */
-    Multicast ()
-        : Datagram() {};
+    MulticastSock ()
+        : DatagramSock() {};
 
     /**
      * @brief   Join multicast group.
@@ -241,14 +250,14 @@ public:
  * @brief   Class Broadcast: Special broadcast UDP sockets
  * @note    Usually, enabling a broadcast socket requires special privileges.
  * ------ */
-class Broadcast : public Datagram
+class BroadcastSock : public DatagramSock
 {
 public:
     /**
      * @brief   Constructor. Creates the socket and enables broadcast.
      * @throws  std::system_error (usually due to lack of permissions).
      */
-    Broadcast();
+    BroadcastSock();
 
     /**
      * @brief   Send a broadcast message.
@@ -262,199 +271,178 @@ public:
     );
 };
 
-
-#if 0
-
 /** ----------------------------------------------------
- * @brief   Clase SockInetStream: Sockets de tipo Stream del dominio Internet, basados en TCP.
- * @details Clase base para sockets de tipo cliente y servidor
+ * @brief   Class Stream: Internet Stream (TCP) sockets.
+ * @details Base class for server and client stream sockets.
  * ------ */
-class Stream : public Inet
+class StreamBase : public InetBase
 {
 public:
     /**
-     * @brief Función set_keepalive, parámetro status
+     * @brief   Configure the automatic send of keep-alive packets
+     * @details The system sends periodic keep-alive messages to the other end to know if it is still connected.
+     *          This function allows changing the parameters of that feature.
+     * @throws  std::system_error
      */
-    enum KeepAliveModes
-    {
-        KEEPALIVE_OFF = 0,                                  //!< Desactivar el envío de mensajes "keep alive"
-        KEEPALIVE_ON = 1                                    //!< Activar el envío de mensajes "keep alive"
-    };
-
-    /**
-     * @brief   Apertura genérica de un socket stream.
-     * @note    Normalmente no se utiliza explícitamente este constructor.
-     */
-    Stream (
-        int32_t hs = INVALID_HANDLER                         /** @param hs Descriptor del socket (opcional) */
-    );
-
-    /**
-     * @brief   Programar el envío de mensajes "keep alive"
-     */
-    bool                                                  /** @return true: el cambio se completó con éxito | false: error */
+    void
     setKeepAlive (
-        KeepAliveModes mode,                                   /** @param mode      Activar o desactivar el envío de mensajes "keep alive" */
-        int32_t idletime  = kaDefaultIdleTime,              /** @param idletime  Tiempo (en segundos) de inactividad del socket antes de empezar a enviar mensajes [180] */
-        int32_t interval  = kaDefaultInterval,              /** @param interval  Tiempo (en segundos) entre mensajes de "keep alive" [15] */
-        int32_t dropcount = kaDefaultDropCount              /** @param dropcount Número de mensajes no respondidos para considerar que la conexión se ha perdido [9] */
+        bool mode,                                      //!< Enable (true) or disable (false) sending keep-alive messages.
+        int idletime  = kaDefaultIdleTime,              //!< Inactivity time to start sending keep-alive messages (seconds). [ 180 ]
+        int interval  = kaDefaultInterval,              //!< Interval between consecutive keep-alive messages (seconds). [15]
+        int dropcount = kaDefaultDropCount              //!< Number of unanswered messages at which the connection is considered lost. [9]
     );
 
     /**
-     * @brief   Establecer el modo y timeout de "linger"
-     * @note    Si timeout es menor que 0, se desactiva el linger.
+     * @brief   Configure the 'linger' option.
+     * @details When enabled, the socker destructor will not return until all queued messages for the socket have been successfully sent
+     *          or the linger timeout has been reached. Otherwise, the call returns immediately and the closing is done in the background.
+     *          When the socket is closed as part of exit(), it always lingers in the background.
+     * @throws  std::system_error
+     * @note    If a negative timeout is provided, the linger option is disabled.
      */
-    bool                                                  /** @return true: el cambio se completó con éxito | false: error */
+    void
     setLinger (
-        int32_t timeout                                     /** @param timeout Tiempo máximo de espera de linger */
+        int timeout                                     //!< Max time to wait for the socket to exit clean (seconds), or negative for disable lingering.
     );
 
     /**
-     * @brief   Habilitar o deshabilitar el modo de envío de datos inmediato
-     * @note    Cuando se activa el modo de envío inmediato, los datos son enviados al extremo sin esperar
-     *          a llenar un segmento de datos. Debe activarse para aplicaciones de tiempo real.
-     * @note    Por omisión, el envío inmediato está deshabilitado y se usa el algoritmo de Nagle.
+     * @brief   Configure the 'no delay' option.
+     * @details If set, disable the Nagle algorithm. This means that segments are always sent as soon as possible, even if there is only a
+     *          small amount of data. When not set, data is buffered until there is a sufficient amount to send out, thereby avoiding the
+     *          frequent sending of small packets, which results in poor utilization of the network.
+     * @throws  std::system_error
      */
-    bool                                                  /** @return true: el cambio se completó con éxito | false: error */
-    setNodelay (                                         /** @param mode true: activa el envío inmediato | false: desactiva el envío inmediato */
-        bool mode
+    void
+    setNodelay (
+        bool mode                                       //!< Enable (true) or disable (false) the no-delay mode.
     );
 
 protected:
-    static constexpr int kaDefaultIdleTime  = 180;        //!< set_keepalive: Tiempo de inactividad por omisión
-    static constexpr int kaDefaultInterval  =  15;        //!< set_keepalive: Intervalo entre mensajes de keepalive por omisión
-    static constexpr int kaDefaultDropCount =   9;        //!< set_keepalive: Número por omisión de mensajes no respondidos
-};
-
-/**-------------------------------------------------------------------------------------------------
- * @brief   Clase SockInetStreamCli: Sockets cliente de tipo Stream del dominio Internet
- * ------ */
-class StreamClient : public Stream
-{
-public:
-    /**
-     * @brief   Apertura genérica de un socket stream.
-     * @desc    Se crea el socket pero no se conecta.
-     */
-    StreamClient ()
-        : Stream(INVALID_HANDLER)
-    {};
-
-    /**
-     * @brief   Constructor con conexión al servidor
-     */
-    StreamClient (
-        const char* target,                                 /** @param target  Nombre (DNS) o dirección (numbers-and-dots) del servidor con el que conectar */
-        in_port_t port                                      /** @param port    Puerto del servidor al que se conecta (en orden de host) */
-    );
-
-    /**
-     * @brief   Constructor con conexión al servidor
-     * @note    Dirección especificada en forma de entero.
-     */
-    StreamClient (
-        in_addr_t target,                                   /** @param target  Dirección del servidor con el que conectar (en orden de host) */
-        in_port_t port                                      /** @param port    Puerto del servidor al que se conecta (en orden de host) */
-    );
-
-    /**
-     * @brief   Constructor con conexión al servidor
-     * @note    Dirección especificada en forma de estructura de dirección
-     */
-    StreamClient (
-        sockaddr_in* addr                                   /** @param addr  Puntero a la estructura con la dirección del servidor (en formato de red) */
-    );
-
-    /**
-     * @brief   Conexión a un servidor remoto
-     * @note    Dirección especificada en forma de entero.
-     */
-    bool                                                  /** @return true: Conexión correcta | false: Destino no alcanzado o error general (véase errno) */
-    connect (
-        sockaddr_in* addr                                   /** @param addr  Puntero a la estructura con la dirección del servidor (en formato de red) */
-    );
-};
-
-/**-------------------------------------------------------------------------------------------------
- * @brief   Clase SockInetStreamSrv: Sockets servidor de tipo Stream del dominio Internet
- * ------ */
-class StreamServer : public Stream
-{
-public:
-    /**
-     * @brief   Función stream_srv, parámetro reuseMode
-     */
-    enum EnReuseMode
+    enum                                                // KeepAlive default parameters
     {
-        DONT_REUSE_ADDR = 0,                                //!< No intentar reutilizar la dirección (puerto)
-        REUSE_ADDR      = 1                                 //!< Reutilizar la dirección (puerto) si es posible
+        kaDefaultIdleTime  = 180,                       //!< setKeepAlive: Default inactivity timer (seconds).
+        kaDefaultInterval  =  15,                       //!< setKeepAlive: Default interval between two consecutive keep-alive messages (seconds).
+        kaDefaultDropCount =   9                        //!< setKeepAlive: Default max miss counter.
+    };
+
+    friend class StreamServerSock;                      //!< Allow the derived class to create new objects of this class.
+
+    /**
+     * @brief   Default constructor.
+     * @details To be used by the derived classes.
+     */
+    StreamBase ()
+        : InetBase(SOCK_STREAM) {};
+
+    /**
+     * @brief   Constructor with handler.
+     * @details To be used by the derived classes when a new socket is created by the system (eg. on accept()).
+     */
+    StreamBase (
+        HandleSocket hs                                 //!< Handler of the connected socket.
+    )   : InetBase(hs) {};
+};
+
+/** ----------------------------------------------------
+ * @brief     Class StreamClientSock: Internet Stream (TCP) sockets, client version
+ * ------ */
+class StreamClientSock : public StreamBase
+{
+public:
+    /**
+     * @brief   Default constructor.
+     * @details The socket is created but it is not connected.
+     * @see     connect
+     */
+    StreamClientSock ()
+        : StreamBase() {};
+
+    /**
+     * @brief   Constructor with server connection.
+     * @throws  std::system_error
+     */
+    StreamClientSock (
+        const Address& addr                             //!< Network address to which the socket will connect.
+    );
+
+    /**
+     * @brief   Connect the socket to a remote server
+     * @throws  std::system_error
+     */
+    void
+    connect (
+        const Address& addr                             //!< Network address to which the socket will connect.
+    );
+};
+
+/** ----------------------------------------------------
+ * @brief     Class StreamServerSock: Internet Stream (TCP) sockets, server version
+ * ------ */
+class StreamServerSock : public StreamBase
+{
+public:
+    enum ReuseOptions                                   /** @brief  Options for reusing addresses. @see StreamServerSock, bind */
+    {
+        DONT_REUSE_ADDRESS = 0,                         //!< Don't reuse the requested address (actually, port).
+        REUSE_ADDRESS      = 1                          //!< Reuse the requested port if it is in TIME_WAIT state.
     };
 
     /**
-     * @brief   Enlazar el socket con un interfaz local
-     * @note    Si el primer parámetro es INADDR_ANY, el socket se enlaza a todos los interfaces.
-     * @note    Por omisión, reusemode vale DONT_REUSE_ADDR.
+     * @brief   Constructor. Open the socket and bind it to the provided address.
+     * @throws  std::system_error
+     * @see     bind
      */
-    StreamServer (
-        in_addr_t iface,                                    /** @param iface      Dirección del interfaz con el que se enlaza (en orden de host) (INADDR_ANY = enlaza a todos los interfaces) */
-        in_port_t port,                                     /** @param port       Puerto TCP (en orden de host) */
-        EnReuseMode reuseMode = DONT_REUSE_ADDR             /** @param reuseMode  Modalidad de reutilización de puerto: REUSE_ADDR, DONT_REUSE_ADDR [no reutilizar]*/
+    StreamServerSock (
+        const Address& addr,                            //!< Address and port to bind the socket to.
+        ReuseOptions reuse = DONT_REUSE_ADDRESS         //!< Specify if the port must tried to be reused.
     );
 
     /**
-     * @brief   Enlazar el socket con un interfaz local
-     * @note    Por omisión, reusemode vale DONT_REUSE_ADDR.
+     * @brief   Bind the socket to the provided address.
+     * @details Use the address INADDR_ANY to bind the port to all network interfaces.
+     *          The option REUSE_ADDRESS allows binding to a port that is in TIME_WAIT state.
+     *          The TCP stack keeps the ports in TIME_WAIT state for a while after shutting the socket down, just in case a spurious packet
+     *          addressed to that socket is received. During this time, the port can't be reused unless the REUSE_ADDRESS option is set.
+     *          Default is to not reuse addresses.
+     *          If the port is in listening status (i.e. bound by another socket), the binding will fail anyway.
+     * @throws  std::system_error
      */
-    StreamServer (
-        sockaddr_in* addr,                                  /** @param addr       Estructura del interfaz de enlace (en orden de red) */
-        EnReuseMode reuseMode = DONT_REUSE_ADDR             /** @param reuseMode  Modalidad de reutilización de puerto: REUSE_ADDR, DONT_REUSE_ADDR [no reutilizar]*/
-    );
-
-    /**
-     * @brief   Enlazar el socket con un interfaz local
-     */
-    bool                                                  /** @return true: Enlace correcto | false: no se pudo enlazar (permisos, dirección en uso...) (véase errno) */
+    void
     bind (
-        sockaddr_in* addr,                                  /** @param addr      Estructura del interfaz de enlace (en orden de red) */
-        EnReuseMode reuseMode                               /** @param reuseMode Modalidad de reutilización de puerto: REUSE_ADDR, DONT_REUSE_ADDR [no reutilizar]*/
+        const Address& addr,                            //!< Address and port to bind the socket to.
+        ReuseOptions reuse = DONT_REUSE_ADDRESS         //!< Specify if the port must tried to be reused.
     );
 
     /**
-     * @brief   Detener la ejecución del programa hasta recibir una petición de conexión.
-     * @note    Llamada bloqueante. El proceso queda bloqueado en espera de una conexión.
-     * @note    Especifica el espacio reservado para conexiones sin atender; por omisión DEF_MAX_PENDING (20).
-     * @note    Si 'origin' no es nulo, se rellena con la dirección de origen de la petición.
-     * @note    Función obsoleta: utilizar set_listen y get_connection en su lugar.
+     * @brief   Configure the size of the backlog and put the socket in listen mode.
+     * @details The backlog argument defines the maximum length to which the queue of pending connections may grow. If a connection request
+     *          arrives when the queue is full, the client may receive an error or the request may be ignored.
+     * @throws  std::system_error
      */
-    Stream*                                       /** @return  Socket creado para atender la petición. */
-    getRequest (
-        int32_t backlog = DEF_MAX_PENDING,                  /** @param backlog  Máximo permitido de conexiones pendientes. [valor por defecto]*/
-        sockaddr_in* origin = nullptr                       /** @param origin   Dirección de origen de la petición. [descartar dirección de origen]*/
-    );
-
-    /**
-     * @brief   Poner el socket a escuchar y establecer el backlog de conexiones pendientes
-     */
-    bool                                                  /** @return true: operación correcta | false: error */
+    void
     setListen (
-        int32_t backlog = DEF_MAX_PENDING                   /** @param backlog Máximo permitido de peticiones de conexión pendientes. [valor por defecto]*/
+        int backlog = DEFAULT_MAX_BACKLOG               //!< Maximum length of the pending connections queue [ = DEFAULT_MAX_BACKLOG ]
     );
 
     /**
-     * @brief   Obtener una conexión con un cliente
-     * @note    Si timeout es 0 y no hay conexiones pendientes, se vuelve inmediatamente.
-     * @note    Si timeout es WAIT_DATA_FOREVER, se espera hasta que haya una conexión.
-     * @note    @obsoleta
+     * @brief   Get a connection with a client.
+     * @details If timeout is DONT_WAIT and there are no pending connections, the function returns immediately.
+     *          If timeout is WAIT_DATA_FOREVER, it waits forever for an incoming connection.
+     * @throws  std::system_error
      */
-    Stream*                       /** @return  Socket creado para atender la petición. */
+    std::shared_ptr<StreamBase>                         /** @return New socket connected to the remote endpoint. */
     getConnection (
-        int32_t timeout = WAIT_DATA_FOREVER,                /** @param timeout Tiempo máximo de espera para una conexión [espera indefinidamente]*/
-        sockaddr_in* origin = nullptr                       /** @param origin  Dirección de origen de la conexión [descartar dirección de origen]*/
+        int timeout = WAIT_DATA_FOREVER,                //!< Max time waiting for a connection, DONT_WAIT or WAIT_DATA_FOREVER [ = wait forever ]
+        Address* origin = nullptr                       //!< Address of the connection originator, or nullptr for discarding it [ = discard ]
     );
-};
 
-#endif // if 0
+protected:
+    enum
+    {
+        DEFAULT_MAX_BACKLOG         = 32                //!< Default backlog size
+    };
+};
 
 } } // namespaces
 
-#endif // _SOCKET_INTERNET_H_
+#endif // _LIBSOCKET_INET_INTERNET_H_
