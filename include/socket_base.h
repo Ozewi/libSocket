@@ -40,7 +40,7 @@ public:
         };
 
     /**
-     * @brief   Get the object as sockaddr*, required by some functions.
+     * @brief   Get the object as sockaddr*
      */
     operator sockaddr* ()
         {
@@ -48,7 +48,7 @@ public:
         };
 
     /**
-     * @brief   Get the object as const sockaddr*, required by some functions.
+     * @brief   Get the object as const sockaddr*
      */
     operator const sockaddr* () const
         {

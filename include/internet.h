@@ -41,6 +41,14 @@ public:
         const std::string& addr,                        //!< Address in string format.
         in_port_t port                                  //!< Port in integer format. Bytes in native (host) order.
     );
+
+    /**
+     * @brief   Get the object as const sockaddr_in*
+     */
+    operator const sockaddr_in* () const
+        {
+            return reinterpret_cast<const sockaddr_in*>(&addr_);
+        };
 };
 
 /** ----------------------------------------------------
@@ -167,21 +175,11 @@ public:
         const Address& addr                             //!< Endpoint to connect to.
     );
 
-    /**
-     * @brief   Configure the socket to allow sending broadcast datagrams.
-     * @details This function enables the socket to broadcast datagrams. To do it, use the address INADDR_BROADCAST when sending
-     *          out the datagrams. @see inet::Address::Address.
-     * @throws  std::system_error.
-     * @note    Usually, enabling a socket for broadcasting requires special privileges.
-     */
-    void
-    allowBroadcast (
-        bool mode                                       //!< New broadcast-enable mode: on (true) or off (false).
-    );
 protected:
     /**
      * @brief   Read a datagram from the queue.
      * @details Function called by other specialized functions of the class.
+     * @throws  std::system_error
      */
     int                                                 /** @return Message size. */
     readMessage (
@@ -193,42 +191,77 @@ protected:
 };
 
 /** ----------------------------------------------------
- * @brief   Clase SockInetDgram: Sockets de tipo Datagram del dominio Internet, basados en UDP.
- * @details Clase única para el manejo de "clientes" y "servidores".
+ * @brief   Class Multicast: Multicast UDP sockets.
  * ------ */
 class Multicast : public Datagram
 {
 public:
     /**
-     * @brief   Conectar el socket a un grupo de multicast
-     * @note    Si no se especifica interfaz, el sistema escoge el que le parezca mejor.
-     * @note    Sólo funciona en sockets que no estuvieran previamente enlazados (sockets cliente).
+     * @brief   Constructor. Only default constructor allowed.
      */
-    bool                                                  /** @return true si todo fue bien, false si error. */
-    multicastJoin (
-        sockaddr_in* addr,                                  /** @param   Dirección del grupo de multicast al que conectar. */
-        const char* iface = 0                               /** @param   Interfaz de red que se conecta. */
+    Multicast ()
+        : Datagram() {};
+
+    /**
+     * @brief   Join multicast group.
+     * @details The network interface parameter is optional. If set, datagrams will be sent through that interface.
+     *          Otherwise, the system will decide which interface to use according to the routing rules.
+     *          Once the socket joins the group, it will start receiving messages addressed to the group.
+     * @throws  std::system_error
+     */
+    void
+    join (
+        const Address& group,                           //!< Address of the multicast group to subscribe to
+        const std::string& iface = {}                   //!< Network interface to link [= let the system decide ]
     );
 
     /**
-     * @brief   Desconectar el socket de un grupo de multicast
-     * @note    Si la conexión está activa a través de varios interfaces, se desconecta el primero de ellos.
+     * @brief   Leave multicast group.
+     * @throws  std::system_error
      */
-    bool                                                  /** @return true si todo fue bien, false si error. */
-    multicastLeave (
-        sockaddr_in* addr                                   /** @param addr Dirección del grupo de multicast. */
+    void
+    leave (
+        const Address& group                            //!< Address of the multicast group to leave
     );
 
     /**
-     * @brief   Establecer TTL de los paquetes multicast del socket
+     * @brief   Set TTL (Time To Live) of the outgoing multicast packets.
+     * @details TTL is the maximum number of hops a packet can travel. It is decremented by 1 for each hop,
+     *          and the packet is discarded when the value drops to 0.
+     * @throws  std::system_error
+     * @note    This setting only affects outgoing multicast packets.
      */
-    bool                                                  /** @return true si todo fue bien, false si error. */
-    multicastSetTtl (
-        int ttl                                             /** @param ttl Nuevo TTL a establecer */
+    void
+    setOutgoingTtl (
+        int ttl                                         //!< TTL to set
     );
-
-
 };
+
+/** ----------------------------------------------------
+ * @brief   Class Broadcast: Special broadcast UDP sockets
+ * @note    Usually, enabling a broadcast socket requires special privileges.
+ * ------ */
+class Broadcast : public Datagram
+{
+public:
+    /**
+     * @brief   Constructor. Creates the socket and enables broadcast.
+     * @throws  std::system_error (usually due to lack of permissions).
+     */
+    Broadcast();
+
+    /**
+     * @brief   Send a broadcast message.
+     * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
+     *          std::system_error if any error occurs while sending data.
+     */
+    void
+    sendMessage (
+        const void* buffer,                             //!< Pointer to the message to send.
+        unsigned buflen                                 //!< Size of the message.
+    );
+};
+
 
 #if 0
 

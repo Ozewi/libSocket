@@ -11,6 +11,7 @@
 #include "internet.h"
 #include <netdb.h>
 #include <net/if.h>                                     // ifreq
+#include <sys/ioctl.h>                                  // ioctl
 #include <algorithm>
 #include <system_error>
 #include <string>
@@ -165,16 +166,6 @@ void Datagram::connect(const Address& addr)
         throw std::system_error(errno, std::generic_category(), "Datagram::connect: connect");
 }
 
-/**
- * @brief   Establecer permisos de envío para broadcast
- */
-void Datagram::allowBroadcast(bool mode)
-{
-  int value = mode? 1 : 0;
-  if (setsockopt(hsock_, SOL_SOCKET, SO_BROADCAST, &value, sizeof(value)) < 0)
-      throw std::system_error(errno, std::generic_category(), "Datagram::allowBroadcast: setsockopt");
-}
-
 /** ----------------------------------------------------
  * @brief     Class Datagram: Protected functions
  * ------ */
@@ -201,6 +192,90 @@ int Datagram::readMessage(void* buffer, unsigned buflen, int flags, Address* ori
     return msg_len;
 }
 
+/** ----------------------------------------------------
+ * @brief     Class Multicast: Public functions
+ * ------ */
+
+/**
+ * @brief   Conectar el socket a un grupo de multicast
+ */
+void Multicast::join(const Address& group, const std::string& iface)
+{
+    checkValid();
+    int value = 1;
+    if (setsockopt(hsock_, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int)) < 0)
+        throw std::system_error(errno, std::generic_category(), "Multicast::join: setsockopt");
+    if (bind (hsock_, group, group.size()) < 0)
+        throw std::system_error(errno, std::generic_category(), "Multicast::join: bind");
+
+    const sockaddr_in* ptr = group;                     // The magic is in the operator type()
+    ip_mreqn req {};
+    req.imr_multiaddr = ptr->sin_addr;
+    if (iface.size() > 0)
+    {
+        ifreq ifr {};
+        std::copy(iface.begin(), iface.begin() + std::min(iface.size(), sizeof(ifr.ifr_name)), ifr.ifr_name);
+        if (ioctl(hsock_, SIOCGIFINDEX, &ifr) < 0)
+            throw std::system_error(errno, std::generic_category(), "Multicast::join: ioctl(SIOCGIFINDEX)");
+
+        req.imr_ifindex = ifr.ifr_ifindex;
+        if (setsockopt(hsock_, SOL_IP, IP_MULTICAST_IF, &req, sizeof(ip_mreqn)) < 0)
+            throw std::system_error(errno, std::generic_category(), "Multicast::join: setsockopt(IP_MULTICAST_IF)");
+    }
+    if (setsockopt(hsock_, SOL_IP, IP_ADD_MEMBERSHIP, &req, sizeof(ip_mreqn)) < 0)
+        throw std::system_error(errno, std::generic_category(), "Multicast::join: setsockopt(IP_ADD_MEMBERSHIP)");
+}
+
+/**
+ * @brief   Leave multicast group.
+ */
+void Multicast::leave(const Address& group)
+{
+    checkValid();
+    const sockaddr_in* ptr = group;                     // The magic is in the operator type()
+    ip_mreqn req {};
+    req.imr_multiaddr = ptr->sin_addr;
+    if (setsockopt(hsock_, SOL_IP, IP_DROP_MEMBERSHIP, &req, sizeof(ip_mreq)) < 0)
+        throw std::system_error(errno, std::generic_category(), "Multicast::leave: setsockopt(IP_DROP_MEMBERSHIP)");
+}
+
+/**
+ * @brief   Set TTL (Time To Live) of the outgoing multicast packets.
+ * @details TTL is the maximum number of hops a packet can travel. It is decremented by 1 for each hop,
+ *          and the packet is discarded when the value drops to 0.
+ * @note    This setting only affects outgoing multicast packets.
+ */
+void Multicast::setOutgoingTtl (int ttl)
+{
+    checkValid();
+    if (setsockopt(hsock_, SOL_IP, IP_MULTICAST_TTL, &ttl, sizeof(int)) < 0)
+        throw std::system_error(errno, std::generic_category(), "Multicast::setOutgoingTtl: setsockopt(IP_MULTICAST_TTL)");
+}
+
+/** ----------------------------------------------------
+ * @brief     Class Broadcast: Public functions
+ * ------ */
+
+/**
+ * @brief   Constructor. Creates the socket and enables broadcast.
+ */
+Broadcast::Broadcast()
+    : Datagram({INADDR_BROADCAST, 0})
+{
+    int value = 1;
+    if (setsockopt(hsock_, SOL_SOCKET, SO_BROADCAST, &value, sizeof(value)) < 0)
+        throw std::system_error(errno, std::generic_category(), "Broadcast::Broadcast: setsockopt");
+}
+
+/**
+ * @brief   Send a broadcast message.
+ * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
+ *          std::system_error if any error occurs while sending data.
+ */
+void Broadcast::sendMessage (const void* buffer, unsigned buflen)
+{
+    Datagram::sendMessage(buffer, buflen, nullptr);
+}
 
 
 } } // namespaces
