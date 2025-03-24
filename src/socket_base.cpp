@@ -175,7 +175,7 @@ int SocketBase::waitData(int timeout)
         rt = select(hsock_+1, &socklist, 0, 0, tm_ptr); // Linux-specific: 'select' updates the timeval struct
     while (rt < 0 && errno == EINTR);                   // If interrupted by a signal, continue
     if (rt < 0)
-        throw std::system_error(errno, std::system_category(), "waitData: error in select()");
+        throw std::system_error(errno, std::generic_category(), "waitData: error in select()");
     if (rt > 0 && tm_ptr != nullptr)                    // Calculate remaining time
         rt = ((tm.tv_sec * 1000) + (tm.tv_usec / 1000));
     return rt;
@@ -192,7 +192,7 @@ int SocketBase::getBufferLength (BufferTypes bufType)
     int retval;
     socklen_t size = sizeof(retval);
     if (getsockopt(hsock_, SOL_SOCKET, bufType, reinterpret_cast<void*>(&retval), &size) != 0)
-        throw std::system_error(errno, std::system_category(), "SocketBase::getBufferLength: error in getsockopt()");
+        throw std::system_error(errno, std::generic_category(), "SocketBase::getBufferLength: error in getsockopt()");
     return retval;
 }
 
@@ -206,7 +206,7 @@ void SocketBase::setBufferLength (BufferTypes bufType, int buflen)
     checkValid();
 
     if (setsockopt(hsock_, SOL_SOCKET, bufType, reinterpret_cast<void*>(&buflen), sizeof(buflen)) < 0)
-        throw std::system_error(errno, std::system_category(), "setBufferLength: error in setsockopt()");
+        throw std::system_error(errno, std::generic_category(), "setBufferLength: error in setsockopt()");
 }
 
 /**

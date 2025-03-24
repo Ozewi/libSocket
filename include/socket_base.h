@@ -8,8 +8,8 @@
  * Please read the file LICENSE for further details.
  */
 
-#ifndef _SOCK_BASE_H_
-#define _SOCK_BASE_H_
+#ifndef _SOCKET_BASE_H_
+#define _SOCKET_BASE_H_
 
 #include <sys/poll.h>                                   // POLLIN, POLLOUT
 #include <sys/socket.h>                                 // SO_SNDBUF, SO_RCVBUF
@@ -41,6 +41,14 @@ public:
 
     /**
      * @brief   Get the object as sockaddr*, required by some functions.
+     */
+    operator sockaddr* ()
+        {
+            return reinterpret_cast<sockaddr*>(&addr_);
+        };
+
+    /**
+     * @brief   Get the object as const sockaddr*, required by some functions.
      */
     operator const sockaddr* () const
         {
@@ -275,4 +283,4 @@ protected:
 
 } // namespace
 
-#endif  // _SOCK_BASE_H_
+#endif  // _SOCKET_BASE_H_
