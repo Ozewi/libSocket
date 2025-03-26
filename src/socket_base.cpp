@@ -55,9 +55,7 @@ int SocketBase::read(void* buffer, int bytes, int timeout)
     if (timeout == DONT_WAIT)                           // don't wait: read as much as you can and exit
         lesen = recv(hsock_, buffer, bytes, MSG_NOSIGNAL | MSG_DONTWAIT);
     else if (timeout == WAIT_DATA_FOREVER)              // wait until all data is received
-    {
         lesen = recv(hsock_, buffer, bytes, MSG_NOSIGNAL | MSG_WAITALL);
-    }
     else                                                // Regular timeout
     {
         fd_set socklist;
