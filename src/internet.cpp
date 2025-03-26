@@ -123,11 +123,11 @@ DatagramSock::DatagramSock (const Address& address)
 }
 
 /**
- * @brief     Get and dequeue a message from the socket queue.
+ * @brief   Read (dequeue) a datagram from the socket queue.
  */
-int DatagramSock::getMessage(void* buffer, unsigned buflen, Address* origin)
+int DatagramSock::readMessage(void* buffer, unsigned buflen, Address* origin)
 {
-    return readMessage(buffer, buflen, 0, origin);
+    return getMessage(buffer, buflen, 0, origin);
 }
 
 /**
@@ -135,13 +135,13 @@ int DatagramSock::getMessage(void* buffer, unsigned buflen, Address* origin)
  */
 int DatagramSock::peekMessage (void* buffer, unsigned buflen, Address* origin)
 {
-    return readMessage(buffer, buflen, MSG_PEEK, origin);
+    return getMessage(buffer, buflen, MSG_PEEK, origin);
 }
 
 /**
- * @brief     Send a message to a remote endpoint.
+ * @brief   Write (enqueue) a message to send it to a remote endpoint.
  */
-void DatagramSock::sendMessage (const void* buffer, unsigned buflen, Address* dest)
+void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* dest)
 {
     if (buffer == nullptr || buflen == 0)
         throw std::invalid_argument("DatagramSock::writeMessage: 'buffer' is null or 'buflen' is 0.");
@@ -168,9 +168,9 @@ void DatagramSock::connect(const Address& addr)
 }
 
 /**
- * @brief     Read a datagram from the queue.
+ * @brief     Get a datagram from the queue.
  */
-int DatagramSock::readMessage(void* buffer, unsigned buflen, int flags, Address* origin)
+int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, Address* origin)
 {
     if (buffer == nullptr || buflen == 0)
         throw std::invalid_argument("DatagramSock::getMessage: 'buffer' is null or 'buflen' is 0.");
@@ -269,38 +269,38 @@ BroadcastSock::BroadcastSock()
  * @throws    std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
  *            std::system_error if any error occurs while sending data.
  */
-void BroadcastSock::sendMessage (const void* buffer, unsigned buflen)
+void BroadcastSock::writeMessage (const void* buffer, unsigned buflen)
 {
-    DatagramSock::sendMessage(buffer, buflen, nullptr);
+    DatagramSock::writeMessage(buffer, buflen, nullptr);
 }
 
 /** ----------------------------------------------------
- * @brief     Class StreamBase
+ * @brief     Class StreamSock
  * ------ */
 
 /**
  * @brief     Configure the automatic send of keep-alive packets
  */
-void StreamBase::setKeepAlive (bool mode, int idletime, int interval, int dropcount)
+void StreamSock::setKeepAlive (bool mode, int idletime, int interval, int dropcount)
 {
     checkValid();
     if (setsockopt(hsock_, SOL_SOCKET, SO_KEEPALIVE, &mode, sizeof(mode)) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamBase::setKeepAlive: SO_KEEPALIVE");
+        throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: SO_KEEPALIVE");
     if (mode == true)
     {
         if (setsockopt(hsock_, SOL_TCP, TCP_KEEPIDLE, &idletime, sizeof(int)) < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamBase::setKeepAlive: TCP_KEEPIDLE");
+            throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: TCP_KEEPIDLE");
         if (setsockopt(hsock_, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(int)) < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamBase::setKeepAlive: TCP_KEEPINTVL");
+            throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: TCP_KEEPINTVL");
         if (setsockopt(hsock_, SOL_TCP, TCP_KEEPCNT, &dropcount, sizeof(int)) < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamBase::setKeepAlive: TCP_KEEPCNT");
+            throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: TCP_KEEPCNT");
     }
 }
 
 /**
  * @brief     Configure the linger option.
  */
-void StreamBase::setLinger (int timeout)
+void StreamSock::setLinger (int timeout)
 {
     checkValid();
     linger ling = {};                                   // Default to 0.
@@ -310,18 +310,18 @@ void StreamBase::setLinger (int timeout)
         ling.l_linger = timeout;
     }
     if (setsockopt(hsock_, SOL_SOCKET, SO_LINGER, &ling, sizeof(linger)) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamBase::setLinger: setsockopt");
+        throw std::system_error(errno, std::generic_category(), "StreamSock::setLinger: setsockopt");
 }
 
 /**
  * @brief     Configure the 'no delay' option.
  */
-void StreamBase::setNodelay (bool mode)
+void StreamSock::setNodelay (bool mode)
 {
     checkValid();
     int m = mode;
     if (setsockopt(hsock_, SOL_SOCKET, TCP_NODELAY, &m, sizeof(m)) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamBase::setNodelay: setsockopt");
+        throw std::system_error(errno, std::generic_category(), "StreamSock::setNodelay: setsockopt");
 }
 
 /** ----------------------------------------------------
@@ -329,11 +329,11 @@ void StreamBase::setNodelay (bool mode)
  * ------ */
 
 /**
- * @brief   Constructor with server connection.
- * @throws  std::system_error
+ * @brief     Constructor with server connection.
+ * @throws    std::system_error
  */
 StreamClientSock::StreamClientSock (const Address& addr)
-    : StreamBase()
+    : StreamSock()
 {
     checkValid();
     if (::connect(hsock_, addr, addr.size()) < 0)
@@ -359,17 +359,17 @@ void StreamClientSock::connect (const Address& addr)
  * ------ */
 
 /**
- * @brief   Constructor. Open the socket and bind it to the provided address.
+ * @brief     Constructor. Open the socket and bind it to the provided address.
  */
 StreamServerSock::StreamServerSock(const Address& addr, ReuseOptions reuse)
-    : StreamBase()
+    : StreamSock()
 {
     checkValid();
     bind(addr, reuse);
 }
 
 /**
- * @brief   Bind the socket to the provided address.
+ * @brief     Bind the socket to the provided address.
  */
 void StreamServerSock::bind (const Address& addr, ReuseOptions reuse)
 {
@@ -380,7 +380,7 @@ void StreamServerSock::bind (const Address& addr, ReuseOptions reuse)
 }
 
 /**
- * @brief   Configure the size of the backlog and put the socket in listen mode.
+ * @brief     Configure the size of the backlog and put the socket in listen mode.
  */
 void StreamServerSock::setListen (int backlog)
 {
@@ -390,9 +390,9 @@ void StreamServerSock::setListen (int backlog)
 }
 
 /**
- * @brief   Get a connection with a client.
+ * @brief     Get a connection with a client.
  */
-std::shared_ptr<StreamBase> StreamServerSock::getConnection (int timeout, Address* origin)
+std::shared_ptr<StreamSock> StreamServerSock::getConnection (int timeout, Address* origin)
 {
     if (waitData(timeout) > 0)                          // Got something
     {
@@ -406,7 +406,7 @@ std::shared_ptr<StreamBase> StreamServerSock::getConnection (int timeout, Addres
         }
         if (haccept.hf < 0)
             throw std::system_error(errno, std::generic_category(), "StreamServerSock::getConnection: accept");
-        return std::shared_ptr<StreamBase>(new StreamBase(haccept));
+        return std::shared_ptr<StreamSock>(new StreamSock(haccept));
     }
     return nullptr;
 }

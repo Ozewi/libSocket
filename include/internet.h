@@ -133,14 +133,14 @@ public:
     );
 
     /**
-     * @brief   Get and dequeue a datagram from the socket queue.
+     * @brief   Read (dequeue) a datagram from the socket queue.
      * @details If the 'origin' pointer is provided (i.e. is not null), it will be filled with the address of the message originator.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
      *          std::system_error if any error occurs while receiving data.
      * @note    If the input queue is empty, this function will block waiting for data.
      */
     int                                                 /** @return Message size. */
-    getMessage (
+    readMessage (
         void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
         unsigned buflen,                                //!< Size of the buffer.
         Address* origin = nullptr                       //!< Pointer to the object to contain the origin address. [= nullptr]
@@ -161,13 +161,13 @@ public:
     );
 
     /**
-     * @brief   Send a message to a remote endpoint.
+     * @brief   Write (enqueue) a message to send it to a remote endpoint.
      * @details If the socket is connected, the destination address is ignored and can be null.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
      *          std::system_error if any error occurs while sending data.
      */
     void
-    sendMessage (
+    writeMessage (
         const void* buffer,                             //!< Pointer to the message to send.
         unsigned buflen,                                //!< Size of the message.
         Address* dest                                   //!< Destination address, or nullptr for connected sockets.
@@ -186,12 +186,12 @@ public:
 
 protected:
     /**
-     * @brief   Read a datagram from the queue.
+     * @brief   Get a datagram from the queue.
      * @details Function called by other specialized functions of the class.
      * @throws  std::system_error
      */
     int                                                 /** @return Message size. */
-    readMessage (
+    getMessage (
         void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
         unsigned buflen,                                //!< Size of the buffer.
         int flags = 0,                                  //!< Reading flags [= 0]. @see recvfrom
@@ -265,17 +265,17 @@ public:
      *          std::system_error if any error occurs while sending data.
      */
     void
-    sendMessage (
+    writeMessage (
         const void* buffer,                             //!< Pointer to the message to send.
         unsigned buflen                                 //!< Size of the message.
     );
 };
 
 /** ----------------------------------------------------
- * @brief   Class Stream: Internet Stream (TCP) sockets.
+ * @brief   Class StreamSock: Internet Stream (TCP) sockets.
  * @details Base class for server and client stream sockets.
  * ------ */
-class StreamBase : public InetBase
+class StreamSock : public InetBase
 {
 public:
     /**
@@ -331,22 +331,22 @@ protected:
      * @brief   Default constructor.
      * @details To be used by the derived classes.
      */
-    StreamBase ()
+    StreamSock ()
         : InetBase(SOCK_STREAM) {};
 
     /**
      * @brief   Constructor with handler.
      * @details To be used by the derived classes when a new socket is created by the system (eg. on accept()).
      */
-    StreamBase (
+    StreamSock (
         HandleSocket hs                                 //!< Handler of the connected socket.
     )   : InetBase(hs) {};
 };
 
 /** ----------------------------------------------------
- * @brief     Class StreamClientSock: Internet Stream (TCP) sockets, client version
+ * @brief   Class StreamClientSock: Internet Stream (TCP) sockets, client version
  * ------ */
-class StreamClientSock : public StreamBase
+class StreamClientSock : public StreamSock
 {
 public:
     /**
@@ -355,7 +355,7 @@ public:
      * @see     connect
      */
     StreamClientSock ()
-        : StreamBase() {};
+        : StreamSock() {};
 
     /**
      * @brief   Constructor with server connection.
@@ -376,9 +376,9 @@ public:
 };
 
 /** ----------------------------------------------------
- * @brief     Class StreamServerSock: Internet Stream (TCP) sockets, server version
+ * @brief   Class StreamServerSock: Internet Stream (TCP) sockets, server version
  * ------ */
-class StreamServerSock : public StreamBase
+class StreamServerSock : public StreamSock
 {
 public:
     enum ReuseOptions                                   /** @brief  Options for reusing addresses. @see StreamServerSock, bind */
@@ -430,7 +430,7 @@ public:
      *          If timeout is WAIT_DATA_FOREVER, it waits forever for an incoming connection.
      * @throws  std::system_error
      */
-    std::shared_ptr<StreamBase>                         /** @return New socket connected to the remote endpoint. */
+    std::shared_ptr<StreamSock>                         /** @return New socket connected to the remote endpoint. */
     getConnection (
         int timeout = WAIT_DATA_FOREVER,                //!< Max time waiting for a connection, DONT_WAIT or WAIT_DATA_FOREVER [ = wait forever ]
         Address* origin = nullptr                       //!< Address of the connection originator, or nullptr for discarding it [ = discard ]

@@ -15,6 +15,7 @@
 #include <sys/socket.h>                                 // SO_SNDBUF, SO_RCVBUF
 #include <vector>                                       // waitevent(...vector<SockBase>)
 #include <string>
+#include <functional>                                   // std::reference_wrapper
 
 namespace libSocket {
 
@@ -239,9 +240,13 @@ protected:
      * @note    To be used only by derived classes.
      */
     SocketBase (
-        int family,                                     //!< Socket family
-        int protocol                                    //!< Socket protocol
-    )   : hsock_(socket(family, protocol, 0)), inode_(getInode()) {};
+        int family,                                     //!< Socket family: PF_INET, PF_UNIX, ...
+        int type,                                       //!< Socket type: SOCK_STREAM, SOCK_DGRAM, ...
+        int protocol = 0                                //!< Socket protocol (usually 0)
+    )   : hsock_(socket(family, type, protocol)), inode_(getInode())
+        {
+            checkValid();
+        };
 
     /**
      * @brief   Close and shutdown the socket.
