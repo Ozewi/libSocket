@@ -1,0 +1,16 @@
+var searchData=
+[
+  ['setbufferlength_0',['setBufferLength',['../classlibSocket_1_1SocketBase.html#a32bfde2d7bb208f5bcd7080419278322',1,'libSocket::SocketBase']]],
+  ['setdestination_1',['setDestination',['../classlibSocket_1_1packet_1_1EtherPacket.html#a4ee289d421bef7fa64a8bc7e8789cbee',1,'libSocket::packet::EtherPacket::setDestination()'],['../packet_8h.html#add2fc384e9613566528655299c8a8749',1,'setDestination():&#160;packet.h']]],
+  ['setiomode_2',['setIomode',['../classlibSocket_1_1SocketBase.html#a292ca7dcd1d3dd1c01cfe57f6768f98b',1,'libSocket::SocketBase']]],
+  ['setkeepalive_3',['setKeepAlive',['../classlibSocket_1_1inet_1_1StreamSock.html#adc25771c4c53f3f366cf4174a75e4491',1,'libSocket::inet::StreamSock']]],
+  ['setlinger_4',['setLinger',['../classlibSocket_1_1inet_1_1StreamSock.html#a87768a6560b212ae5c2d4e6c33eacff3',1,'libSocket::inet::StreamSock']]],
+  ['setlisten_5',['setListen',['../classlibSocket_1_1inet_1_1StreamServerSock.html#a5916306958fbc3f4ea936816e7a5359f',1,'libSocket::inet::StreamServerSock::setListen()'],['../classlibSocket_1_1unx_1_1StreamServerSock.html#aa2201e0a769e6819b318b85606806094',1,'libSocket::unx::StreamServerSock::setListen()']]],
+  ['setnodelay_6',['setNodelay',['../classlibSocket_1_1inet_1_1StreamSock.html#aafa99d6c1732b6399f0e7348e9bdb181',1,'libSocket::inet::StreamSock']]],
+  ['setoutgoingttl_7',['setOutgoingTtl',['../classlibSocket_1_1inet_1_1MulticastSock.html#a9ad415febf117f45e523123ec430c367',1,'libSocket::inet::MulticastSock']]],
+  ['setpayload_8',['setPayload',['../classlibSocket_1_1packet_1_1EtherPacket.html#a1c7d6844bffd653352e18f2af27b9485',1,'libSocket::packet::EtherPacket::setPayload()'],['../packet_8h.html#a2796e495ebc3b6b0494d74f407297eb4',1,'setPayload():&#160;packet.h']]],
+  ['size_9',['size',['../classlibSocket_1_1Address.html#a14acd18b8a684a5e1d210f75753b0097',1,'libSocket::Address']]],
+  ['socketbase_10',['SocketBase',['../classlibSocket_1_1SocketBase.html#a1850b260478b48b3159fdd94a2fefc48',1,'libSocket::SocketBase::SocketBase()'],['../classlibSocket_1_1SocketBase.html#a52058beac24ce68a0a909f0a631b6fcc',1,'libSocket::SocketBase::SocketBase(SocketBase &amp;&amp;other)'],['../classlibSocket_1_1SocketBase.html#a4e7fd4370afcf677e9d68c8aadb969c1',1,'libSocket::SocketBase::SocketBase(SocketBase &amp;)=delete']]],
+  ['streamclientsock_11',['StreamClientSock',['../classlibSocket_1_1inet_1_1StreamClientSock.html#a348ce4584ddb027853c7335d2de07ca0',1,'libSocket::inet::StreamClientSock::StreamClientSock()'],['../classlibSocket_1_1inet_1_1StreamClientSock.html#a98007276aff23c37aa74389d8995b43a',1,'libSocket::inet::StreamClientSock::StreamClientSock(const Address &amp;addr)'],['../classlibSocket_1_1unx_1_1StreamClientSock.html#aa4631bd2c224878a4b8000d090fc9bda',1,'libSocket::unx::StreamClientSock::StreamClientSock()'],['../classlibSocket_1_1unx_1_1StreamClientSock.html#a7fc91c4f7b68780fae2755e54a505ffc',1,'libSocket::unx::StreamClientSock::StreamClientSock(const Address &amp;addr)']]],
+  ['streamserversock_12',['StreamServerSock',['../classlibSocket_1_1inet_1_1StreamServerSock.html#a495c598775474c1140939d9cb5378eb8',1,'libSocket::inet::StreamServerSock::StreamServerSock()'],['../classlibSocket_1_1unx_1_1StreamServerSock.html#ab187d87b9e8e16924bd39991e0a306cc',1,'libSocket::unx::StreamServerSock::StreamServerSock()']]]
+];

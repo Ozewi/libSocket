@@ -20,16 +20,19 @@ namespace libSocket { namespace packet {
 /** ----------------------------------------------------
  * @brief   Class EtherPacket: A raw ethernet packet.
  * @details ether_header is a struct defined in net/ethernet.h this way:
+ * @code{.c}
  *          struct ether_header
  *          {
  *            u_int8_t  ether_dhost[ETH_ALEN];      // destination eth addr
  *            u_int8_t  ether_shost[ETH_ALEN];      // source ether addr
  *            u_int16_t ether_type;                 // packet type ID field
  *          } __attribute__ ((__packed__));
+ * @endcode
  * @note    Deriving from a conventional struct works as long as there are no virtual members.
  * ------ */
-struct EtherPacket : public ether_header
+class EtherPacket : public ether_header
 {
+public:
     uint8_t payload [ETH_DATA_LEN];                     //!< Payload of the packet.
     uint16_t packet_len;                                //!< Full length of the payload.
 
