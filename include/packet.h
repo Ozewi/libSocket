@@ -1,6 +1,6 @@
 /**
  * @package   libSocket: C++ sockets library.
- * @brief     Sockets of the UNIX domain
+ * @brief     Sockets of the PACKET domain
  * @author    José Luis Sánchez Arroyo
  * @section   License
  * Copyright (c) 1998-2025 José Luis Sánchez Arroyo
@@ -8,14 +8,14 @@
  * Please read the file LICENSE for further details.
  */
 
-#ifndef _LIBSOCKET_UNX_UNIX_H_
-#define _LIBSOCKET_UNX_UNIX_H_
+#ifndef _LIBSOCKET_PACKET_PACKET_H_
+#define _LIBSOCKET_PACKET_PACKET_H_
 
 #include "socket_base.h"
 #include <netinet/if_ether.h>           // ether_header
 #include <netinet/in.h>                 // in_addr_t
 
-namespace libSocket { namespace raw {
+namespace libSocket { namespace packet {
 
 /** ----------------------------------------------------
  * @brief   Class EtherPacket: A raw ethernet packet.
@@ -97,9 +97,9 @@ struct EtherPacket : public ether_header
 } __attribute__((packed));
 
 /** ----------------------------------------------------
- * @brief   Class PacketRawSock: Raw ethernet packet socket.
+ * @brief   Class PacketSock: Raw ethernet packet socket.
  * ------ */
-class PacketRawSock : public SocketBase
+class PacketSock : public SocketBase
 {
 public:
     /**
@@ -108,7 +108,7 @@ public:
      * @see     libSocket::getInterfaceList for a list of available interfaces.
      * @see     include/linux/if_ether.h for a list of standard ethernet protocols.
      */
-    PacketRawSock (
+    PacketSock (
         const std::string& iface,                       //!< Network interface name ("eth0", "lo", etc)
         uint16_t protocol                               //!< Ethernet protocol (0x0800 = IP, etc)
     );
@@ -164,10 +164,9 @@ public:
 protected:
     uint16_t  protocol_;                                //!< Ethernet protocol of the socket.
     uint8_t   mac_[ETH_ALEN];                           //!< MAC address of the bound interface.
-    int       mtu_;                                     //!< MTU of the bound network.
-    in_addr_t local_addr_;                              //!< Local address (IP)
+    std::string iface_;                                 //!< Interface name.
 };
 
 } } // namespaces
 
-#endif  // _LIBSOCKET_UNX_UNIX_H_
+#endif  // _LIBSOCKET_PACKET_PACKET_H_

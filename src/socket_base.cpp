@@ -47,7 +47,7 @@ SocketBase::~SocketBase ()
 int SocketBase::read(void* buffer, int bytes, int timeout)
 {
     if (buffer == nullptr || bytes <= 0)
-        throw std::invalid_argument("SocketBase::read: 'buffer' is null or 'bytes' is 0");
+        THROW_INVALID_ARGUMENT("read: 'buffer' is null or 'bytes' is 0");
     checkValid();
 
     int lesen = 0;
@@ -74,12 +74,12 @@ int SocketBase::read(void* buffer, int bytes, int timeout)
                 {
                     if (errno == EINTR)                 // Interrupted by a signal: continue.
                         continue;
-                    throw std::system_error(errno, std::generic_category(), "SocketBase::read: error in select()");
+                    THROW_SYSTEM_ERROR("read: error in select()");
                 }
             }
             int err = recv(hsock_, reinterpret_cast<char*>(buffer) + lesen, bytes - lesen, MSG_NOSIGNAL);
             if (err < 0)
-                throw std::system_error(errno, std::generic_category(), "SocketBase::read: error in recv()");
+                THROW_SYSTEM_ERROR("read: error in recv()");
             if (err == 0)                               // EOF -- socket was probably closed on the other end
                 break;
             lesen += err;
@@ -94,7 +94,7 @@ int SocketBase::read(void* buffer, int bytes, int timeout)
 int SocketBase::write(const void* buffer, int bytes, WriteModes writeMode)
 {
     if (buffer == nullptr || bytes <= 0)
-        throw std::invalid_argument("SocketBase::write: 'buffer' is null or 'bytes' is 0");
+        THROW_INVALID_ARGUMENT("write: 'buffer' is null or 'bytes' is 0");
     checkValid();
 
     int flags = MSG_NOSIGNAL;
@@ -102,7 +102,7 @@ int SocketBase::write(const void* buffer, int bytes, WriteModes writeMode)
         flags |= MSG_DONTWAIT;
     auto bytes_sent = send(hsock_, buffer, bytes, flags);
     if (bytes_sent < 0)                                 // negative result indicates an error
-        throw std::system_error(errno, std::generic_category(), "SocketBase::write: error in send()");
+        THROW_SYSTEM_ERROR("write: error in send()");
     return bytes_sent;
 }
 
@@ -126,7 +126,7 @@ int SocketBase::pending()
 {
     int count = 0;
     if (ioctl(hsock_, FIONREAD, &count) < 0)
-        throw std::invalid_argument("SocketBase::pending: the socket is in an invalid state");
+        THROW_INVALID_ARGUMENT("pending: the socket is in an invalid state");
     if (count == 0)
         /* ---This is a hack---
          * On datagram sockets, this ioctl retrieves the payload length of the next datagram in the queue.
@@ -157,7 +157,7 @@ int SocketBase::waitData(int timeout)
         rt = select(hsock_+1, &socklist, 0, 0, tm_ptr); // Linux-specific: 'select' updates the timeval struct
     while (rt < 0 && errno == EINTR);                   // If interrupted by a signal, continue
     if (rt < 0)
-        throw std::system_error(errno, std::generic_category(), "waitData: error in select()");
+        THROW_SYSTEM_ERROR("waitData: error in select()");
     if (rt > 0 && tm_ptr != nullptr)                    // Calculate remaining time
         rt = ((tm.tv_sec * 1000) + (tm.tv_usec / 1000));
     return rt;
@@ -169,12 +169,12 @@ int SocketBase::waitData(int timeout)
 int SocketBase::getBufferLength (BufferTypes bufType)
 {
     if (bufType != SEND_BUFFER && bufType != RECEIVE_BUFFER)
-        throw std::invalid_argument("SocketBase::getBufferLength: 'bufType' is invalid.");
+        THROW_INVALID_ARGUMENT("getBufferLength: 'bufType' is invalid.");
     checkValid();
     int retval;
     socklen_t size = sizeof(retval);
     if (getsockopt(hsock_, SOL_SOCKET, bufType, reinterpret_cast<void*>(&retval), &size) != 0)
-        throw std::system_error(errno, std::generic_category(), "SocketBase::getBufferLength: error in getsockopt()");
+        THROW_SYSTEM_ERROR("getBufferLength: error in getsockopt()");
     return retval;
 }
 
@@ -184,11 +184,11 @@ int SocketBase::getBufferLength (BufferTypes bufType)
 void SocketBase::setBufferLength (BufferTypes bufType, int buflen)
 {
     if (bufType != SEND_BUFFER && bufType != RECEIVE_BUFFER)
-        throw std::invalid_argument("SocketBase::setBufferLength: 'buftype' is invalid.");
+        THROW_INVALID_ARGUMENT("setBufferLength: 'buftype' is invalid.");
     checkValid();
 
     if (setsockopt(hsock_, SOL_SOCKET, bufType, reinterpret_cast<void*>(&buflen), sizeof(buflen)) < 0)
-        throw std::system_error(errno, std::generic_category(), "setBufferLength: error in setsockopt()");
+        THROW_SYSTEM_ERROR("setBufferLength: error in setsockopt()");
 }
 
 /**
@@ -228,15 +228,6 @@ ino_t SocketBase::getInode() const
     if (hsock_ != INVALID_HANDLER && fstat(hsock_, &st) >= 0)
         return st.st_ino;
     return 0;
-}
-
-/**
- * @brief     Check socket validity
- */
-void SocketBase::checkValid()
-{
-    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-        throw std::system_error(EBADF, std::generic_category(), "Invalid socket handler");
 }
 
 /**

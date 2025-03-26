@@ -16,6 +16,18 @@
 #include <vector>                                       // waitevent(...vector<SockBase>)
 #include <string>
 #include <functional>                                   // std::reference_wrapper
+#include <system_error>                                 // std::system_error, std::invalid_argument
+
+// Useful macros for throwing exceptions with source info
+#define QUOTE(x) MACRO_TO_STRING(x)
+#define MACRO_TO_STRING(x) #x
+#define CONTEXTUALIZE(txt) std::string() + __FILE__ ":" QUOTE( __LINE__ )  " (" + __FUNCTION__ + ") - " txt
+
+#define THROW_SYSTEM_ERROR(txt) throw std::system_error(errno, std::generic_category(), CONTEXTUALIZE(txt))
+#define THROW_INVALID_ARGUMENT(txt) throw std::invalid_argument(CONTEXTUALIZE(txt))
+
+// Using this macro instead of the function provides context information about the exception
+#define checkValid() { if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE) THROW_SYSTEM_ERROR("Invalid socket handler"); }
 
 namespace libSocket {
 
@@ -133,7 +145,7 @@ public:
     read (
         void* buffer,                                   //!< Pointer to the read buffer
         int max_bytes,                                  //!< Number of bytes to read
-        int timeout                                     //!< Reading timeout (in milliseconds). Also @see ReadTimeouts for other values.
+        int timeout = DONT_WAIT                         //!< Reading timeout (in milliseconds). Also @see ReadTimeouts for other values. [ = DONT_WAIT ]
     );
 
     /**
@@ -148,6 +160,19 @@ public:
         int buf_len,                                    //!< Length of the write buffer
         WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
     );
+
+    /**
+     * @brief   Write data to the socket.
+     * @details Simplified version using std::string. @see write
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Number of bytes sent. */
+    write (
+        const std::string& buffer,                      //!< Write buffer
+        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
+    )   {
+            return write(buffer.c_str(), buffer.size() + 1, write_mode);
+        };
 
     /**
      * @brief   Close the socket.
@@ -259,13 +284,6 @@ protected:
      */
     ino_t                                               /** @return inode of the socket. \n 0: Error or invalid socket. */
     getInode () const;
-
-    /**
-     * @brief   Check socket validity
-     * @throws  std::system_error if the handler is not valid.
-     */
-    void
-    checkValid ();
 
     /**
      * @brief   Invalidate the socket handler.

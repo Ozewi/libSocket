@@ -13,9 +13,9 @@
 
 #include "libSocket/socket_base.h"
 #include "libSocket/functions.h"
-#include "libSocket/inet.h"
+#include "libSocket/internet.h"
 #include "libSocket/unix.h"
-#include "libSocket/rawpacket.h"
+#include "libSocket/packet.h"
 
 namespace libSocket {
 /**
