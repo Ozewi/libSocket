@@ -26,9 +26,6 @@
 #define THROW_SYSTEM_ERROR(txt) throw std::system_error(errno, std::generic_category(), CONTEXTUALIZE(txt))
 #define THROW_INVALID_ARGUMENT(txt) throw std::invalid_argument(CONTEXTUALIZE(txt))
 
-// Using this macro instead of the function provides context information about the exception
-#define checkValid() { if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE) THROW_SYSTEM_ERROR("Invalid socket handler"); }
-
 namespace libSocket {
 
 /** ----------------------------------------------------
@@ -270,7 +267,8 @@ protected:
         int protocol = 0                                //!< Socket protocol (usually 0)
     )   : hsock_(socket(family, type, protocol)), inode_(getInode())
         {
-            checkValid();
+            if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+                THROW_SYSTEM_ERROR("Invalid socket handler");
         };
 
     /**

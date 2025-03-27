@@ -57,7 +57,7 @@ PacketSock::PacketSock (const std::string& iface, uint16_t protocol)
     ifreq ifr = {};
     std::copy(iface_.begin(), iface_.begin() + std::min(iface_.size(), sizeof(ifr.ifr_name) - 1), ifr.ifr_name);
     if (ioctl(hsock_, SIOCGIFINDEX, &ifr) < 0)
-        THROW_SYSTEM_ERROR("PacketSock: ioctl(SIOCGIFINDEX)");
+        THROW_SYSTEM_ERROR("ioctl(SIOCGIFINDEX)");
 
     sockaddr_ll addr = {};
     addr.sll_family   = PF_PACKET;
@@ -65,10 +65,10 @@ PacketSock::PacketSock (const std::string& iface, uint16_t protocol)
     addr.sll_ifindex  = ifr.ifr_ifindex;
     addr.sll_pkttype  = PACKET_HOST;
     if (::bind(hsock_, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_ll)) < 0)
-        THROW_SYSTEM_ERROR("PacketSock: bind");
+        THROW_SYSTEM_ERROR("bind()");
 
     if (ioctl(hsock_, SIOCGIFHWADDR, &ifr) != 0)        // Get hardware address (MAC)
-        THROW_SYSTEM_ERROR("PacketSock: ioctl(SIOCGIFHWADDR)");
+        THROW_SYSTEM_ERROR("ioctl(SIOCGIFHWADDR)");
     std::copy(ifr.ifr_hwaddr.sa_data, ifr.ifr_hwaddr.sa_data + ETH_ALEN, mac_);
 }
 
@@ -77,10 +77,11 @@ PacketSock::PacketSock (const std::string& iface, uint16_t protocol)
  */
 void PacketSock::readPacket(EtherPacket& pkt)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     auto lesen = ::read(hsock_, pkt, sizeof(pkt));
     if (lesen < 0)
-        throw std::system_error(errno, std::generic_category(), "PacketSock::readPacket: read");
+        THROW_SYSTEM_ERROR("read()");
     pkt.packet_len = lesen;
 }
 
@@ -89,10 +90,11 @@ void PacketSock::readPacket(EtherPacket& pkt)
  */
 void PacketSock::peekPacket(EtherPacket& pkt)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     auto lesen = ::recv(hsock_, pkt, sizeof(pkt), MSG_PEEK);
     if (lesen < 0)
-        throw std::system_error(errno, std::generic_category(), "PacketSock::peekPacket: recv");
+        THROW_SYSTEM_ERROR("recv()");
     pkt.packet_len = lesen;
 }
 
@@ -101,11 +103,12 @@ void PacketSock::peekPacket(EtherPacket& pkt)
  */
 void PacketSock::writePacket (EtherPacket& pkt)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     std::copy(mac_, mac_ + sizeof(mac_), pkt.ether_shost);
     pkt.ether_type = protocol_;
     if (::write(hsock_, pkt, pkt.packet_len) < 0)
-        throw std::system_error(errno, std::generic_category(), "PacketSock::writePacket: write");
+        THROW_SYSTEM_ERROR("write");
 }
 
 /**
@@ -113,7 +116,8 @@ void PacketSock::writePacket (EtherPacket& pkt)
  */
 std::basic_string<uint8_t> PacketSock::getMac ()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     std::basic_string<uint8_t> retval;
     retval.assign(mac_, sizeof(mac_));
     return retval;
@@ -124,14 +128,15 @@ std::basic_string<uint8_t> PacketSock::getMac ()
  */
 in_addr_t PacketSock::getLocalAddr()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     ifreq ifr = {};
     std::copy(iface_.begin(), iface_.begin() + std::min(iface_.size(), sizeof(ifr.ifr_name) - 1), ifr.ifr_name);
     if (ioctl(hsock_, SIOCGIFADDR, &ifr) < 0)
     {
         if (errno == EADDRNOTAVAIL)                     // Failed because the interface has no address configured.
             return 0;
-        THROW_SYSTEM_ERROR("PacketSock: ioctl(SIOCGIFADDR)");   // Otherwise throw an exception.
+        THROW_SYSTEM_ERROR("ioctl(SIOCGIFADDR)");   // Otherwise throw an exception.
     }
     return reinterpret_cast<sockaddr_in*>(ifr.ifr_addr.sa_data)->sin_addr.s_addr;
 }
@@ -141,11 +146,12 @@ in_addr_t PacketSock::getLocalAddr()
  */
 int PacketSock::getMtu ()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     ifreq ifr = {};
     std::copy(iface_.begin(), iface_.begin() + std::min(iface_.size(), sizeof(ifr.ifr_name) - 1), ifr.ifr_name);
     if (ioctl(hsock_, SIOCGIFMTU, &ifr) != 0)
-        THROW_SYSTEM_ERROR("PacketSock: ioctl(SIOCGIFMTU)");
+        THROW_SYSTEM_ERROR("ioctl(SIOCGIFMTU)");
     return ifr.ifr_mtu;
 }
 

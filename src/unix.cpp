@@ -30,7 +30,7 @@ Address::Address (const std::string& name)
     addr_.sun_family = PF_UNIX;
     if (name[0] == '/')                                 // 'filesystem' namespace
         std::copy(name.begin(), name.begin() + std::min(name.size(), sizeof(addr_.sun_path)), addr_.sun_path);
-    else
+    else                                                // Abstract sockets namespace
         std::copy(name.begin() + 1, name.begin() + std::min(name.size() - 1, sizeof(addr_.sun_path)), addr_.sun_path);
 }
 
@@ -47,7 +47,7 @@ DatagramSock::DatagramSock (const Address& address)
     if (bind (hsock_, address, address.size()) < 0)
     {
         terminate();
-            throw std::system_error(errno, std::generic_category(), "DatagramSock: bind");
+        THROW_SYSTEM_ERROR("bind()");
     }
 }
 
@@ -73,8 +73,9 @@ std::shared_ptr<DatagramSock> DatagramSock::createPair()
 int DatagramSock::readMessage(void* buffer, unsigned buflen, Address* origin)
 {
     if (buffer == nullptr || buflen == 0)
-        throw std::invalid_argument("DatagramSock::readMessage: 'buffer' is null or 'buflen' is 0.");
-    checkValid();
+        THROW_INVALID_ARGUMENT("'buffer' is null or 'buflen' is 0.");
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
 
     int msg_len;
     if (origin == nullptr)
@@ -85,7 +86,7 @@ int DatagramSock::readMessage(void* buffer, unsigned buflen, Address* origin)
         msg_len = recvfrom(hsock_, buffer, buflen, 0, *origin, &orig_size);
     }
     if (msg_len < 0)
-        throw std::system_error(errno, std::generic_category(), "DatagramSock::getMessage: recvfrom");
+        THROW_SYSTEM_ERROR("recvfrom()");
     return msg_len;
 }
 
@@ -95,8 +96,9 @@ int DatagramSock::readMessage(void* buffer, unsigned buflen, Address* origin)
 void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* dest)
 {
     if (buffer == nullptr || buflen == 0)
-        throw std::invalid_argument("DatagramSock::writeMessage: 'buffer' is null or 'buflen' is 0.");
-    checkValid();
+        THROW_INVALID_ARGUMENT("'buffer' is null or 'buflen' is 0.");
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
 
     int result;
     if (dest == nullptr)
@@ -105,7 +107,7 @@ void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* d
         result = sendto(hsock_, buffer, buflen, 0, *dest, dest->size());
 
     if (result < 0)
-        throw std::system_error(errno, std::generic_category(), "DatagramSock::writeMessage: sendto");
+        THROW_SYSTEM_ERROR("sendto()");
 }
 
 /**
@@ -113,9 +115,10 @@ void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* d
  */
 void DatagramSock::connect(const Address& addr)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (::connect(hsock_, addr, addr.size()) < 0)
-        throw std::system_error(errno, std::generic_category(), "DatagramSock::connect: connect");
+        THROW_SYSTEM_ERROR("connect()");
 }
 
 /** ----------------------------------------------------
@@ -149,11 +152,12 @@ std::shared_ptr<StreamSock> StreamSock::createPair ()
 StreamClientSock::StreamClientSock (const Address& addr)
     : StreamSock()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (::connect(hsock_, addr, addr.size()) < 0)
     {
         terminate();
-        throw std::system_error(errno, std::generic_category(), "StreamClientSock: connect");
+        THROW_SYSTEM_ERROR("connect()");
     }
 }
 
@@ -163,9 +167,10 @@ StreamClientSock::StreamClientSock (const Address& addr)
  */
 void StreamClientSock::connect (const Address& addr)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (::connect(hsock_, addr, addr.size()) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamClientSock::connect: connect");
+        THROW_SYSTEM_ERROR("connect()");
 }
 
 /** ----------------------------------------------------
@@ -178,11 +183,12 @@ void StreamClientSock::connect (const Address& addr)
 StreamServerSock::StreamServerSock(const Address& addr)
     : StreamSock()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (bind(hsock_, addr, addr.size()) < 0)
     {
         terminate();
-        throw std::system_error(errno, std::generic_category(), "StreamServerSock: bind");
+        THROW_SYSTEM_ERROR("bind()");
     }
 }
 
@@ -207,9 +213,10 @@ StreamServerSock::~StreamServerSock()
  */
 void StreamServerSock::setListen (int backlog)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (listen(hsock_, backlog) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamServerSock::setListen: listen");
+        THROW_SYSTEM_ERROR("listen()");
 }
 
 /**
@@ -217,6 +224,8 @@ void StreamServerSock::setListen (int backlog)
  */
 std::shared_ptr<StreamSock> StreamServerSock::getConnection (int timeout, Address* origin)
 {
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (waitData(timeout) > 0)                          // Got something
     {
         HandleSocket haccept;
@@ -228,7 +237,7 @@ std::shared_ptr<StreamSock> StreamServerSock::getConnection (int timeout, Addres
             haccept.hf = accept(hsock_, *origin, &orig_size);
         }
         if (haccept.hf < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamServerSock::getConnection: accept");
+            THROW_SYSTEM_ERROR("accept()");
         return std::shared_ptr<StreamSock>(new StreamSock(haccept));
     }
     return nullptr;

@@ -59,11 +59,12 @@ Address::Address (const std::string& addr, in_port_t port)
  */
 Address InetBase::getAddress ()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     sockaddr_in addr;
     socklen_t sz = sizeof(sockaddr_in);
     if (getsockname(hsock_, reinterpret_cast<sockaddr*>(&addr), &sz) < 0)
-        throw std::system_error(errno, std::generic_category(), "InetBase::getAddress: getsockname");
+        THROW_SYSTEM_ERROR("getsockname()");
     return Address(addr.sin_addr.s_addr, addr.sin_port);
 }
 
@@ -72,11 +73,12 @@ Address InetBase::getAddress ()
  */
 Address InetBase::getPeerAddress ()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     sockaddr_in addr;
     socklen_t sz = sizeof(sockaddr_in);
     if (getpeername(hsock_, reinterpret_cast<sockaddr*>(&addr), &sz) < 0)
-        throw std::system_error(errno, std::generic_category(), "InetBase::getPeerAddress: getsockname");
+        THROW_SYSTEM_ERROR("getsockname()");
     return Address(addr.sin_addr.s_addr, addr.sin_port);
 }
 
@@ -85,11 +87,12 @@ Address InetBase::getPeerAddress ()
  */
 int InetBase::getMtu()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     int vmtu;
     socklen_t len = sizeof(vmtu);
     if (getsockopt(hsock_, SOL_IP, IP_MTU, &vmtu, &len) < 0)
-        throw std::system_error(errno, std::generic_category(), "InetBase::getMtu: getsockopt");
+        THROW_SYSTEM_ERROR("getsockopt()");
     return vmtu;
 }
 
@@ -98,11 +101,12 @@ int InetBase::getMtu()
  */
 void InetBase::bindToDevice(const std::string& iface)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     ifreq ifr;
     std::copy(iface.begin(), iface.begin() + std::min(iface.size(), sizeof(ifr.ifr_name)), ifr.ifr_name);
     if (setsockopt(hsock_, SOL_SOCKET, SO_BINDTODEVICE, reinterpret_cast<void*>(&ifr), sizeof(ifr)) < 0)
-        throw std::system_error(errno, std::generic_category(), "InetBase::bindToDevice: setsockopt");
+        THROW_SYSTEM_ERROR("setsockopt(SO_BINDTODEVICE)");
 }
 
 /** ----------------------------------------------------
@@ -118,7 +122,7 @@ DatagramSock::DatagramSock (const Address& address)
     if (bind (hsock_, address, address.size()) < 0)
     {
         terminate();
-        throw std::system_error(errno, std::generic_category(), "DatagramSock: bind");
+        THROW_SYSTEM_ERROR("bind()");
     }
 }
 
@@ -145,7 +149,8 @@ void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* d
 {
     if (buffer == nullptr || buflen == 0)
         throw std::invalid_argument("DatagramSock::writeMessage: 'buffer' is null or 'buflen' is 0.");
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
 
     int result;
     if (dest == nullptr)
@@ -162,9 +167,10 @@ void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* d
  */
 void DatagramSock::connect(const Address& addr)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (::connect(hsock_, addr, addr.size()) < 0)
-        throw std::system_error(errno, std::generic_category(), "DatagramSock::connect: connect");
+        THROW_SYSTEM_ERROR("connect()");
 }
 
 /**
@@ -174,7 +180,8 @@ int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, Address* 
 {
     if (buffer == nullptr || buflen == 0)
         throw std::invalid_argument("DatagramSock::getMessage: 'buffer' is null or 'buflen' is 0.");
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
 
     int msg_len;
     if (origin == nullptr)
@@ -185,7 +192,7 @@ int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, Address* 
         msg_len = recvfrom(hsock_, buffer, buflen, flags, *origin, &orig_size);
     }
     if (msg_len < 0)
-        throw std::system_error(errno, std::generic_category(), "DatagramSock::getMessage: recvfrom");
+        THROW_SYSTEM_ERROR("recvfrom()");
     return msg_len;
 }
 
@@ -198,12 +205,13 @@ int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, Address* 
  */
 void MulticastSock::join(const Address& group, const std::string& iface)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     int value = 1;
     if (setsockopt(hsock_, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int)) < 0)
-        throw std::system_error(errno, std::generic_category(), "MulticastSock::join: setsockopt");
+        THROW_SYSTEM_ERROR("setsockopt(SO_REUSEADDR)");
     if (bind (hsock_, group, group.size()) < 0)
-        throw std::system_error(errno, std::generic_category(), "MulticastSock::join: bind");
+        THROW_SYSTEM_ERROR("bind()");
 
     const sockaddr_in* ptr = group;                     // The magic is in the operator type()
     ip_mreqn req {};
@@ -213,14 +221,14 @@ void MulticastSock::join(const Address& group, const std::string& iface)
         ifreq ifr {};
         std::copy(iface.begin(), iface.begin() + std::min(iface.size(), sizeof(ifr.ifr_name)), ifr.ifr_name);
         if (ioctl(hsock_, SIOCGIFINDEX, &ifr) < 0)
-            throw std::system_error(errno, std::generic_category(), "MulticastSock::join: ioctl(SIOCGIFINDEX)");
+            THROW_SYSTEM_ERROR("ioctl(SIOCGIFINDEX)");
 
         req.imr_ifindex = ifr.ifr_ifindex;
         if (setsockopt(hsock_, SOL_IP, IP_MULTICAST_IF, &req, sizeof(ip_mreqn)) < 0)
-            throw std::system_error(errno, std::generic_category(), "MulticastSock::join: setsockopt(IP_MULTICAST_IF)");
+        THROW_SYSTEM_ERROR("setsockopt(IP_MULTICAST_IF)");
     }
     if (setsockopt(hsock_, SOL_IP, IP_ADD_MEMBERSHIP, &req, sizeof(ip_mreqn)) < 0)
-        throw std::system_error(errno, std::generic_category(), "MulticastSock::join: setsockopt(IP_ADD_MEMBERSHIP)");
+        THROW_SYSTEM_ERROR("setsockopt(IP_ADD_MEMBERSHIP)");
 }
 
 /**
@@ -228,12 +236,13 @@ void MulticastSock::join(const Address& group, const std::string& iface)
  */
 void MulticastSock::leave(const Address& group)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     const sockaddr_in* ptr = group;                     // The magic is in the operator type()
     ip_mreqn req {};
     req.imr_multiaddr = ptr->sin_addr;
     if (setsockopt(hsock_, SOL_IP, IP_DROP_MEMBERSHIP, &req, sizeof(ip_mreq)) < 0)
-        throw std::system_error(errno, std::generic_category(), "MulticastSock::leave: setsockopt(IP_DROP_MEMBERSHIP)");
+        THROW_SYSTEM_ERROR("setsockopt(IP_DROP_MEMBERSHIP)");
 }
 
 /**
@@ -244,9 +253,10 @@ void MulticastSock::leave(const Address& group)
  */
 void MulticastSock::setOutgoingTtl (int ttl)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (setsockopt(hsock_, SOL_IP, IP_MULTICAST_TTL, &ttl, sizeof(int)) < 0)
-        throw std::system_error(errno, std::generic_category(), "MulticastSock::setOutgoingTtl: setsockopt(IP_MULTICAST_TTL)");
+        THROW_SYSTEM_ERROR("setsockopt(IP_MULTICAST_TTL)");
 }
 
 /** ----------------------------------------------------
@@ -261,7 +271,7 @@ BroadcastSock::BroadcastSock()
 {
     int value = 1;
     if (setsockopt(hsock_, SOL_SOCKET, SO_BROADCAST, &value, sizeof(value)) < 0)
-        throw std::system_error(errno, std::generic_category(), "BroadcastSock::BroadcastSock: setsockopt");
+        THROW_SYSTEM_ERROR("setsockopt(SO_BROADCAST)");
 }
 
 /**
@@ -283,17 +293,18 @@ void BroadcastSock::writeMessage (const void* buffer, unsigned buflen)
  */
 void StreamSock::setKeepAlive (bool mode, int idletime, int interval, int dropcount)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (setsockopt(hsock_, SOL_SOCKET, SO_KEEPALIVE, &mode, sizeof(mode)) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: SO_KEEPALIVE");
+        THROW_SYSTEM_ERROR("setsockopt(SO_KEEPALIVE)");
     if (mode == true)
     {
         if (setsockopt(hsock_, SOL_TCP, TCP_KEEPIDLE, &idletime, sizeof(int)) < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: TCP_KEEPIDLE");
+            THROW_SYSTEM_ERROR("setsockopt(TCP_KEEPIDLE)");
         if (setsockopt(hsock_, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(int)) < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: TCP_KEEPINTVL");
+            THROW_SYSTEM_ERROR("setsockopt(TCP_KEEPINTVL)");
         if (setsockopt(hsock_, SOL_TCP, TCP_KEEPCNT, &dropcount, sizeof(int)) < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamSock::setKeepAlive: TCP_KEEPCNT");
+            THROW_SYSTEM_ERROR("setsockopt(TCP_KEEPCNT)");
     }
 }
 
@@ -302,7 +313,8 @@ void StreamSock::setKeepAlive (bool mode, int idletime, int interval, int dropco
  */
 void StreamSock::setLinger (int timeout)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     linger ling = {};                                   // Default to 0.
     if (timeout > 0)
     {
@@ -310,7 +322,7 @@ void StreamSock::setLinger (int timeout)
         ling.l_linger = timeout;
     }
     if (setsockopt(hsock_, SOL_SOCKET, SO_LINGER, &ling, sizeof(linger)) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamSock::setLinger: setsockopt");
+        THROW_SYSTEM_ERROR("setsockopt(SO_LINGER)");
 }
 
 /**
@@ -318,10 +330,11 @@ void StreamSock::setLinger (int timeout)
  */
 void StreamSock::setNodelay (bool mode)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     int m = mode;
     if (setsockopt(hsock_, SOL_SOCKET, TCP_NODELAY, &m, sizeof(m)) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamSock::setNodelay: setsockopt");
+        THROW_SYSTEM_ERROR("setsockopt(TCP_NODELAY)");
 }
 
 /** ----------------------------------------------------
@@ -335,11 +348,12 @@ void StreamSock::setNodelay (bool mode)
 StreamClientSock::StreamClientSock (const Address& addr)
     : StreamSock()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (::connect(hsock_, addr, addr.size()) < 0)
     {
         terminate();
-        throw std::system_error(errno, std::generic_category(), "StreamClientSock: connect");
+        THROW_SYSTEM_ERROR("connect()");
     }
 }
 
@@ -349,9 +363,10 @@ StreamClientSock::StreamClientSock (const Address& addr)
  */
 void StreamClientSock::connect (const Address& addr)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (::connect(hsock_, addr, addr.size()) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamClientSock::connect: connect");
+        THROW_SYSTEM_ERROR("connect()");
 }
 
 /** ----------------------------------------------------
@@ -364,7 +379,8 @@ void StreamClientSock::connect (const Address& addr)
 StreamServerSock::StreamServerSock(const Address& addr, ReuseOptions reuse)
     : StreamSock()
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     bind(addr, reuse);
 }
 
@@ -376,7 +392,7 @@ void StreamServerSock::bind (const Address& addr, ReuseOptions reuse)
     if (reuse == REUSE_ADDRESS)
         setsockopt(hsock_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
     if (::bind (hsock_, addr, addr.size()) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamServerSock::bind: bind");
+        THROW_SYSTEM_ERROR("bind()");
 }
 
 /**
@@ -384,9 +400,10 @@ void StreamServerSock::bind (const Address& addr, ReuseOptions reuse)
  */
 void StreamServerSock::setListen (int backlog)
 {
-    checkValid();
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
     if (listen(hsock_, backlog) < 0)
-        throw std::system_error(errno, std::generic_category(), "StreamServerSock::setListen: listen");
+        THROW_SYSTEM_ERROR("listen()");
 }
 
 /**
@@ -405,7 +422,7 @@ std::shared_ptr<StreamSock> StreamServerSock::getConnection (int timeout, Addres
             haccept.hf = accept(hsock_, *origin, &orig_size);
         }
         if (haccept.hf < 0)
-            throw std::system_error(errno, std::generic_category(), "StreamServerSock::getConnection: accept");
+            THROW_SYSTEM_ERROR("accept()");
         return std::shared_ptr<StreamSock>(new StreamSock(haccept));
     }
     return nullptr;
