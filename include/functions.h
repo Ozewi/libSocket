@@ -36,6 +36,15 @@ getInterfaceList();
 std::basic_string<uint8_t>                              /** @return Hardware Address */
 getMac (
     const std::string& iface                            //!< Network interface name ("eth0", "lo", etc)
+) noexcept;
+
+/**
+ * @brief   Get the local IP address of the interface.
+ * @see     getInterfaceList to get a list of available interfaces.
+ */
+std::string                                             /** @return IP Address */
+getLocalAddr (
+    const std::string& iface                            //!< Network interface name ("eth0", "lo", etc)
 );
 
 } // namespace

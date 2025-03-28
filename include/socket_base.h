@@ -64,6 +64,32 @@ public:
         {
             return reinterpret_cast<const sockaddr*>(&addr_);
         };
+
+    /**
+     * @brief   Get the object as pointer to its base type
+     */
+    operator SockClass* ()
+        {
+            return reinterpret_cast<SockClass*>(&addr_);
+        };
+
+    /**
+     * @brief   Get the object as const pointer to its base type
+     */
+    operator const SockClass* () const
+        {
+            return reinterpret_cast<const SockClass*>(&addr_);
+        };
+
+    /**
+     * @brief   Get the object as pointer to its base type
+     */
+    SockClass*
+    get()
+        {
+            return reinterpret_cast<SockClass*>(&addr_);
+        };
+
 protected:
     SockClass addr_;                                    //!< Socket address in BSD format
 };

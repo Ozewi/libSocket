@@ -11,9 +11,10 @@
 #include "functions.h"
 #include <sys/ioctl.h>
 #include <net/if.h>                                     // if_nameindex, ifreq
+#include <arpa/inet.h>                                  // inet_ntop
 #include <vector>
 #include <system_error>
-
+#include <netinet/in.h>
 namespace libSocket {
 
 /** ----------------------------------------------------
@@ -37,7 +38,7 @@ std::vector<std::string> getInterfaceList()
 /**
  * @brief   Get the MAC address of the interface.
  */
-std::basic_string<uint8_t> getMac(const std::string& iface)
+std::basic_string<uint8_t> getMac(const std::string& iface) noexcept
 {
     std::basic_string<uint8_t> mac;
     auto hsock = socket(PF_INET, SOCK_DGRAM, 0);
@@ -47,6 +48,22 @@ std::basic_string<uint8_t> getMac(const std::string& iface)
         for (int ix = 0; ix < IFHWADDRLEN; ix++)
             mac.push_back(ifr.ifr_ifru.ifru_hwaddr.sa_data[ix]);
     return mac;
+}
+
+/**
+ * @brief   Get the local IP address of the interface.
+ */
+std::string getLocalAddr (const std::string& iface)
+{
+    ifreq ifr = {};
+    std::copy(iface.begin(), iface.begin() + std::min(iface.size(), sizeof(ifr.ifr_name) - 1), ifr.ifr_name);
+    auto hsock = socket(PF_INET, SOCK_DGRAM, 0);
+    if (ioctl(hsock, SIOCGIFADDR, &ifr) < 0)
+        throw std::system_error(errno, std::generic_category(), "SIOCGIFADDR");
+    char tmp[128];
+    if (inet_ntop(AF_INET, &(reinterpret_cast<sockaddr_in*>(&ifr.ifr_addr)->sin_addr), tmp, sizeof(tmp)) == nullptr)
+        return "";
+    return tmp;
 }
 
 } // namespace

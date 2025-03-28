@@ -138,7 +138,7 @@ in_addr_t PacketSock::getLocalAddr()
             return 0;
         THROW_SYSTEM_ERROR("ioctl(SIOCGIFADDR)");   // Otherwise throw an exception.
     }
-    return reinterpret_cast<sockaddr_in*>(ifr.ifr_addr.sa_data)->sin_addr.s_addr;
+    return reinterpret_cast<sockaddr_in*>(&ifr.ifr_addr)->sin_addr.s_addr;
 }
 
 /**

@@ -42,14 +42,6 @@ public:
         const std::string& addr,                        //!< Address in string format.
         in_port_t port                                  //!< Port in integer format. Bytes in native (host) order.
     );
-
-    /**
-     * @brief   Get the object as const sockaddr_in*
-     */
-    operator const sockaddr_in* () const
-        {
-            return reinterpret_cast<const sockaddr_in*>(&addr_);
-        };
 };
 
 /** ----------------------------------------------------

@@ -32,14 +32,6 @@ public:
     Address (
         const std::string& name                         //!< Socket name
     );
-
-    /**
-     * @brief   Get the object as const sockaddr_un*
-     */
-    operator const sockaddr_un* () const
-        {
-            return reinterpret_cast<const sockaddr_un*>(&addr_);
-        };
 };
 
 /** ----------------------------------------------------

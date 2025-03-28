@@ -93,7 +93,7 @@ void client()
             std::cout << "   Bytes: " << lesen << " - Content: '" << buffer << "'\n";
         }
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         std::cout << "Something was wrong ...\n" << e.what() << std::endl;
     }
