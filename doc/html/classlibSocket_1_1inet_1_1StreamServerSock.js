@@ -6,6 +6,6 @@ var classlibSocket_1_1inet_1_1StreamServerSock =
     ] ],
     [ "StreamServerSock", "classlibSocket_1_1inet_1_1StreamServerSock.html#a495c598775474c1140939d9cb5378eb8", null ],
     [ "bind", "classlibSocket_1_1inet_1_1StreamServerSock.html#ae9732c1e6afa795dc7d74af4748557f3", null ],
-    [ "getConnection", "classlibSocket_1_1inet_1_1StreamServerSock.html#a1b84bbb4234ae7adceab36bed5ec2548", null ],
+    [ "getConnection", "classlibSocket_1_1inet_1_1StreamServerSock.html#a33bc20e59ec4547b60d48ed5c7c388a6", null ],
     [ "setListen", "classlibSocket_1_1inet_1_1StreamServerSock.html#a5916306958fbc3f4ea936816e7a5359f", null ]
 ];

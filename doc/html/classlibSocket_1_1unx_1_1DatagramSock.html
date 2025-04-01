@@ -126,15 +126,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a273433a03e212f1f6d51c1fec1f35f8e" id="r_a273433a03e212f1f6d51c1fec1f35f8e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a273433a03e212f1f6d51c1fec1f35f8e">DatagramSock</a> (const <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &amp;address)</td></tr>
 <tr class="memdesc:a273433a03e212f1f6d51c1fec1f35f8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Server constructor.  <br /></td></tr>
 <tr class="separator:a273433a03e212f1f6d51c1fec1f35f8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60e99ca44a3e4880b415e2ca645ec3ef" id="r_a60e99ca44a3e4880b415e2ca645ec3ef"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a60e99ca44a3e4880b415e2ca645ec3ef">~DatagramSock</a> ()</td></tr>
+<tr class="memdesc:a60e99ca44a3e4880b415e2ca645ec3ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <br /></td></tr>
+<tr class="separator:a60e99ca44a3e4880b415e2ca645ec3ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2380e95d4c392810915cb26beaf27065" id="r_a2380e95d4c392810915cb26beaf27065"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classlibSocket_1_1unx_1_1DatagramSock.html">DatagramSock</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2380e95d4c392810915cb26beaf27065">createPair</a> ()</td></tr>
 <tr class="memdesc:a2380e95d4c392810915cb26beaf27065"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a socket connected to this socket.  <br /></td></tr>
 <tr class="separator:a2380e95d4c392810915cb26beaf27065"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab87614b3f93175a1b069a14b550cf02" id="r_aab87614b3f93175a1b069a14b550cf02"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aab87614b3f93175a1b069a14b550cf02">readMessage</a> (void *buffer, unsigned buflen, <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> *origin=nullptr)</td></tr>
-<tr class="memdesc:aab87614b3f93175a1b069a14b550cf02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read (dequeue) a datagram from the socket queue.  <br /></td></tr>
-<tr class="separator:aab87614b3f93175a1b069a14b550cf02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28b13b83e83de8d6d1f096f041fa48e4" id="r_a28b13b83e83de8d6d1f096f041fa48e4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a28b13b83e83de8d6d1f096f041fa48e4">writeMessage</a> (const void *buffer, unsigned buflen, <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> *dest)</td></tr>
-<tr class="memdesc:a28b13b83e83de8d6d1f096f041fa48e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a message to a listening socket.  <br /></td></tr>
-<tr class="separator:a28b13b83e83de8d6d1f096f041fa48e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9573df5aa3b18cf37e8c72604687d3be" id="r_a9573df5aa3b18cf37e8c72604687d3be"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9573df5aa3b18cf37e8c72604687d3be">readMessage</a> (void *buffer, unsigned buflen, std::optional&lt; std::reference_wrapper&lt; <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &gt; &gt; origin=std::nullopt)</td></tr>
+<tr class="memdesc:a9573df5aa3b18cf37e8c72604687d3be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read (dequeue) a datagram from the socket queue.  <br /></td></tr>
+<tr class="separator:a9573df5aa3b18cf37e8c72604687d3be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad91bef5b52e868c444ebdd39890164ff" id="r_ad91bef5b52e868c444ebdd39890164ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad91bef5b52e868c444ebdd39890164ff">writeMessage</a> (const void *buffer, unsigned buflen, std::optional&lt; std::reference_wrapper&lt; <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &gt; &gt; dest=std::nullopt)</td></tr>
+<tr class="memdesc:ad91bef5b52e868c444ebdd39890164ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a message to a listening socket.  <br /></td></tr>
+<tr class="separator:ad91bef5b52e868c444ebdd39890164ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1875065eee2930fac193025b6e5c0948" id="r_a1875065eee2930fac193025b6e5c0948"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1875065eee2930fac193025b6e5c0948">connect</a> (const <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &amp;addr)</td></tr>
 <tr class="memdesc:a1875065eee2930fac193025b6e5c0948"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connect the socket to a listening socket.  <br /></td></tr>
 <tr class="separator:a1875065eee2930fac193025b6e5c0948"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -221,9 +224,6 @@ autotoc_md15</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">libSocket::unx::DatagramSock::DatagramSock </td>
@@ -232,11 +232,6 @@ autotoc_md15</h2>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Client constructor. </p>
@@ -273,6 +268,26 @@ autotoc_md15</h2>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a60e99ca44a3e4880b415e2ca645ec3ef" name="a60e99ca44a3e4880b415e2ca645ec3ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60e99ca44a3e4880b415e2ca645ec3ef">&#9670;&#160;</a></span>~DatagramSock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">libSocket::unx::DatagramSock::~DatagramSock </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destructor. </p>
+<p>Removes the socket from the filesystem, if exists. </p>
 
 </div>
 </div>
@@ -329,8 +344,8 @@ autotoc_md15</h2>
 
 </div>
 </div>
-<a id="aab87614b3f93175a1b069a14b550cf02" name="aab87614b3f93175a1b069a14b550cf02"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aab87614b3f93175a1b069a14b550cf02">&#9670;&#160;</a></span>readMessage()</h2>
+<a id="a9573df5aa3b18cf37e8c72604687d3be" name="a9573df5aa3b18cf37e8c72604687d3be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9573df5aa3b18cf37e8c72604687d3be">&#9670;&#160;</a></span>readMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -348,13 +363,13 @@ autotoc_md15</h2>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> *</td>          <td class="paramname"><span class="paramname"><em>origin</em></span><span class="paramdefsep"> = </span><span class="paramdefval">nullptr</span>&#160;)</td>
+          <td class="paramtype">std::optional&lt; std::reference_wrapper&lt; <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &gt; &gt;</td>          <td class="paramname"><span class="paramname"><em>origin</em></span><span class="paramdefsep"> = </span><span class="paramdefval">std::nullopt</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Read (dequeue) a datagram from the socket queue. </p>
-<p>If the 'origin' pointer is provided (i.e. is not null), it will be filled with the address of the message originator. </p><dl class="exception"><dt>Exceptions</dt><dd>
+<p>If the 'origin' argument is provided, it will be filled with the address of the message originator. </p><dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the 'buffer' pointer is null or 'buflen' is 0. std::system_error if any error occurs while receiving data. </td></tr>
   </table>
@@ -366,15 +381,15 @@ autotoc_md15</h2>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>Pointer to the buffer that will contain the datagram.  </td></tr>
     <tr><td class="paramname">buflen</td><td>Size of the buffer.  </td></tr>
-    <tr><td class="paramname">origin</td><td>Pointer to the object to contain the origin address. [= nullptr] </td></tr>
+    <tr><td class="paramname">origin</td><td>Pointer to the object to contain the origin address. [= none] </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a28b13b83e83de8d6d1f096f041fa48e4" name="a28b13b83e83de8d6d1f096f041fa48e4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a28b13b83e83de8d6d1f096f041fa48e4">&#9670;&#160;</a></span>writeMessage()</h2>
+<a id="ad91bef5b52e868c444ebdd39890164ff" name="ad91bef5b52e868c444ebdd39890164ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad91bef5b52e868c444ebdd39890164ff">&#9670;&#160;</a></span>writeMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -392,13 +407,13 @@ autotoc_md15</h2>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> *</td>          <td class="paramname"><span class="paramname"><em>dest</em></span>&#160;)</td>
+          <td class="paramtype">std::optional&lt; std::reference_wrapper&lt; <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &gt; &gt;</td>          <td class="paramname"><span class="paramname"><em>dest</em></span><span class="paramdefsep"> = </span><span class="paramdefval">std::nullopt</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Send a message to a listening socket. </p>
-<p>If the socket is connected, the destination address is ignored and can be null. </p><dl class="exception"><dt>Exceptions</dt><dd>
+<p>If the socket is connected, the destination address is ignored and can be absent. </p><dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the 'buffer' pointer is null or 'buflen' is 0. std::system_error if any error occurs while sending data. </td></tr>
   </table>
@@ -408,7 +423,7 @@ autotoc_md15</h2>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>Pointer to the message to send.  </td></tr>
     <tr><td class="paramname">buflen</td><td>Size of the message.  </td></tr>
-    <tr><td class="paramname">dest</td><td>Destination address, or nullptr for connected sockets. </td></tr>
+    <tr><td class="paramname">dest</td><td>Destination address. Ignored (may be absent) on connected sockets. </td></tr>
   </table>
   </dd>
 </dl>

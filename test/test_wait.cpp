@@ -3,20 +3,16 @@
  */
 #include <libSocket/libSocket.h>
 #include <iostream>
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
 #include <time.h>
+#include <chrono>
+#include <thread>
+using namespace std::chrono_literals;
 
 enum
 {
     BufferSize = 512,
     ReadTimeout = 5000,
-    TICS_PER_SEC = 1000000              //!< Tics por segundo. Define la resolución interna del reloj.
+    TICS_PER_SEC = 1000000
 };
 const char sock_name[] = "/tmp/test_ux_dgram";
 const uint8_t srv_reply[] = "Recibido, gracias";
@@ -25,7 +21,7 @@ uint64_t GetTimeNow()
 {
     timespec now;
     clock_gettime(CLOCK_BOOTTIME, &now);
-    uint64_t bignow = now.tv_sec;                         // tv_sec es de tipo time_t, que es un entero (32 o 64 bits según la máquina)
+    uint64_t bignow = now.tv_sec;                         // tv_sec is of type time_t, which is an integer (32 or 64 bits depending upon the system architecture)
     bignow *= TICS_PER_SEC;
     bignow += (now.tv_nsec / (1000000000 / TICS_PER_SEC));
     return bignow;
@@ -108,7 +104,7 @@ void client()
                     log(clock - packet);
                 }
             }
-            sleep(1);
+            std::this_thread::sleep_for(1s);
         }
     }
     catch(const std::exception& e)

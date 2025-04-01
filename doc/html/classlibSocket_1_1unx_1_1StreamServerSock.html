@@ -130,9 +130,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa2201e0a769e6819b318b85606806094" id="r_aa2201e0a769e6819b318b85606806094"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa2201e0a769e6819b318b85606806094">setListen</a> (int backlog=DEFAULT_MAX_BACKLOG)</td></tr>
 <tr class="memdesc:aa2201e0a769e6819b318b85606806094"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure the size of the backlog and put the socket in listen mode.  <br /></td></tr>
 <tr class="separator:aa2201e0a769e6819b318b85606806094"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e47a5c279e4b8eeb7ddf3442239635e" id="r_a9e47a5c279e4b8eeb7ddf3442239635e"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classlibSocket_1_1unx_1_1StreamSock.html">StreamSock</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9e47a5c279e4b8eeb7ddf3442239635e">getConnection</a> (int timeout=<a class="el" href="classlibSocket_1_1SocketBase.html#a362ca522069313db35840eb943457806a564c0fd80be17d212ef9d61879a6539c">WAIT_DATA_FOREVER</a>, <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> *origin=nullptr)</td></tr>
-<tr class="memdesc:a9e47a5c279e4b8eeb7ddf3442239635e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a connection with a client.  <br /></td></tr>
-<tr class="separator:a9e47a5c279e4b8eeb7ddf3442239635e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22b3888475687e01a0074f11cebc0a86" id="r_a22b3888475687e01a0074f11cebc0a86"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="classlibSocket_1_1unx_1_1StreamSock.html">StreamSock</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a22b3888475687e01a0074f11cebc0a86">getConnection</a> (int timeout=<a class="el" href="classlibSocket_1_1SocketBase.html#a362ca522069313db35840eb943457806a564c0fd80be17d212ef9d61879a6539c">WAIT_DATA_FOREVER</a>, std::optional&lt; std::reference_wrapper&lt; <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &gt; &gt; origin=std::nullopt)</td></tr>
+<tr class="memdesc:a22b3888475687e01a0074f11cebc0a86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a connection with a client.  <br /></td></tr>
+<tr class="separator:a22b3888475687e01a0074f11cebc0a86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classlibSocket_1_1unx_1_1StreamSock"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_classlibSocket_1_1unx_1_1StreamSock')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classlibSocket_1_1unx_1_1StreamSock.html">libSocket::unx::StreamSock</a></td></tr>
 <tr class="memitem:a650842ec1f8e735b378820091355972e inherit pub_methods_classlibSocket_1_1unx_1_1StreamSock" id="r_a650842ec1f8e735b378820091355972e"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classlibSocket_1_1unx_1_1StreamSock.html">StreamSock</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlibSocket_1_1unx_1_1StreamSock.html#a650842ec1f8e735b378820091355972e">createPair</a> ()</td></tr>
 <tr class="memdesc:a650842ec1f8e735b378820091355972e inherit pub_methods_classlibSocket_1_1unx_1_1StreamSock"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a socket connected to this socket.  <br /></td></tr>
@@ -267,21 +267,21 @@ autotoc_md18</h2>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a9e47a5c279e4b8eeb7ddf3442239635e" name="a9e47a5c279e4b8eeb7ddf3442239635e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9e47a5c279e4b8eeb7ddf3442239635e">&#9670;&#160;</a></span>getConnection()</h2>
+<a id="a22b3888475687e01a0074f11cebc0a86" name="a22b3888475687e01a0074f11cebc0a86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22b3888475687e01a0074f11cebc0a86">&#9670;&#160;</a></span>getConnection()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::shared_ptr&lt; <a class="el" href="classlibSocket_1_1unx_1_1StreamSock.html">StreamSock</a> &gt; libSocket::unx::StreamServerSock::getConnection </td>
+          <td class="memname">std::optional&lt; <a class="el" href="classlibSocket_1_1unx_1_1StreamSock.html">StreamSock</a> &gt; libSocket::unx::StreamServerSock::getConnection </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>timeout</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="classlibSocket_1_1SocketBase.html#a362ca522069313db35840eb943457806a564c0fd80be17d212ef9d61879a6539c">WAIT_DATA_FOREVER</a></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> *</td>          <td class="paramname"><span class="paramname"><em>origin</em></span><span class="paramdefsep"> = </span><span class="paramdefval">nullptr</span>&#160;)</td>
+          <td class="paramtype">std::optional&lt; std::reference_wrapper&lt; <a class="el" href="classlibSocket_1_1unx_1_1Address.html">Address</a> &gt; &gt;</td>          <td class="paramname"><span class="paramname"><em>origin</em></span><span class="paramdefsep"> = </span><span class="paramdefval">std::nullopt</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -293,11 +293,11 @@ autotoc_md18</h2>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>New socket connected to the remote endpoint. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Socket connected to the remote endpoint, or none. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timeout</td><td>Max time waiting for a connection, DONT_WAIT or WAIT_DATA_FOREVER [ = wait forever ]  </td></tr>
-    <tr><td class="paramname">origin</td><td><a class="el" href="classlibSocket_1_1unx_1_1Address.html" title="Class unix::Address: Unix addresses.">Address</a> of the connection originator, or nullptr for discarding it [ = discard ] </td></tr>
+    <tr><td class="paramname">origin</td><td>Pointer to the object to contain the origin address. [= none] </td></tr>
   </table>
   </dd>
 </dl>

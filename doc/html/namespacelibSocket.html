@@ -131,9 +131,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ae8ea9c0a576afa35a3ecb928b0b71d21" id="r_ae8ea9c0a576afa35a3ecb928b0b71d21"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae8ea9c0a576afa35a3ecb928b0b71d21">getInterfaceList</a> ()</td></tr>
 <tr class="memdesc:ae8ea9c0a576afa35a3ecb928b0b71d21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Independent functions.  <br /></td></tr>
 <tr class="separator:ae8ea9c0a576afa35a3ecb928b0b71d21"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa14a0e5212f3dd9171b4282a6970bf2e" id="r_aa14a0e5212f3dd9171b4282a6970bf2e"><td class="memItemLeft" align="right" valign="top">std::basic_string&lt; uint8_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa14a0e5212f3dd9171b4282a6970bf2e">getMac</a> (const std::string &amp;iface)</td></tr>
-<tr class="memdesc:aa14a0e5212f3dd9171b4282a6970bf2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the MAC address of the interface.  <br /></td></tr>
-<tr class="separator:aa14a0e5212f3dd9171b4282a6970bf2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71647548d174b1b4af5f3b4847e67e3a" id="r_a71647548d174b1b4af5f3b4847e67e3a"><td class="memItemLeft" align="right" valign="top">std::basic_string&lt; uint8_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a71647548d174b1b4af5f3b4847e67e3a">getMac</a> (const std::string &amp;iface) noexcept</td></tr>
+<tr class="memdesc:a71647548d174b1b4af5f3b4847e67e3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the MAC address of the interface.  <br /></td></tr>
+<tr class="separator:a71647548d174b1b4af5f3b4847e67e3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23e12bf63b5370a3b83016e4cf253d5d" id="r_a23e12bf63b5370a3b83016e4cf253d5d"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a23e12bf63b5370a3b83016e4cf253d5d">getLocalAddr</a> (const std::string &amp;iface)</td></tr>
+<tr class="memdesc:a23e12bf63b5370a3b83016e4cf253d5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the local IP address of the interface.  <br /></td></tr>
+<tr class="separator:a23e12bf63b5370a3b83016e4cf253d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a899437d996d36d9426c79ac22c44d221" id="r_a899437d996d36d9426c79ac22c44d221"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a899437d996d36d9426c79ac22c44d221">version</a> ()</td></tr>
 <tr class="memdesc:a899437d996d36d9426c79ac22c44d221"><td class="mdescLeft">&#160;</td><td class="mdescRight">Library version identifier.  <br /></td></tr>
 <tr class="separator:a899437d996d36d9426c79ac22c44d221"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,11 +191,41 @@ autotoc_md0</h2>
 
 </div>
 </div>
-<a id="aa14a0e5212f3dd9171b4282a6970bf2e" name="aa14a0e5212f3dd9171b4282a6970bf2e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa14a0e5212f3dd9171b4282a6970bf2e">&#9670;&#160;</a></span>getMac()</h2>
+<a id="a23e12bf63b5370a3b83016e4cf253d5d" name="a23e12bf63b5370a3b83016e4cf253d5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23e12bf63b5370a3b83016e4cf253d5d">&#9670;&#160;</a></span>getLocalAddr()</h2>
 
 <div class="memitem">
 <div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string libSocket::getLocalAddr </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>iface</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the local IP address of the interface. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="#ae8ea9c0a576afa35a3ecb928b0b71d21" title="Independent functions.">getInterfaceList</a> to get a list of available interfaces. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>IP <a class="el" href="classlibSocket_1_1Address.html" title="Class template Address: Socket addresses.">Address</a> </dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">iface</td><td>Network interface name ("eth0", "lo", etc) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a71647548d174b1b4af5f3b4847e67e3a" name="a71647548d174b1b4af5f3b4847e67e3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a71647548d174b1b4af5f3b4847e67e3a">&#9670;&#160;</a></span>getMac()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::basic_string&lt; uint8_t &gt; libSocket::getMac </td>
@@ -201,6 +234,11 @@ autotoc_md0</h2>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel noexcept">noexcept</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Get the MAC address of the interface. </p>

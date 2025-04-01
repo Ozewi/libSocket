@@ -2,7 +2,6 @@ var socket__base_8h =
 [
     [ "libSocket::Address< SockClass >", "classlibSocket_1_1Address.html", "classlibSocket_1_1Address" ],
     [ "libSocket::SocketBase", "classlibSocket_1_1SocketBase.html", "classlibSocket_1_1SocketBase" ],
-    [ "checkValid", "socket__base_8h.html#af2b7c16e4b94436c277319b630ffd2c1", null ],
     [ "CONTEXTUALIZE", "socket__base_8h.html#a5e55a874fcd966d623441854379a523d", null ],
     [ "MACRO_TO_STRING", "socket__base_8h.html#afccc539fbccee6da70a96336260aa8ae", null ],
     [ "QUOTE", "socket__base_8h.html#a2117b58e19182dff91ad3558e650541d", null ],
