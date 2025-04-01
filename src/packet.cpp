@@ -11,10 +11,9 @@
 #include "packet.h"
 #include <algorithm>                    //
 #include <system_error>                 // std::system_error
-
 #include <string.h>                     // memset, strncpy
 #include <sys/ioctl.h>                  // ioctl
-#include <unistd.h>                     // close
+#include <unistd.h>                     // read, write, close
 #include <net/if.h>                     // ifreq
 #include <netpacket/packet.h>           // sockaddr_ll
 
