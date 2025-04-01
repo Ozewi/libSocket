@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     auto addr = libSocket::inet::Address({argv[1], 123});   // 123 is UDP port for NTP
     std::cout << "ip: " << inet_ntoa(addr.get()->sin_addr) << std::endl;
     libSocket::inet::DatagramSock sock;
-    sock.writeMessage(message, sizeof(message), &addr);
+    sock.writeMessage(message, sizeof(message), addr);
     if (sock.waitData(3500) == 0)
         return error ("Timeout waiting for the server.");
     if (sock.pending() == 0)

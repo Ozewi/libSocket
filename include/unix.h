@@ -15,6 +15,7 @@
 #include <sys/un.h>                                     // sockaddr_un
 #include <memory>                                       // std::shared_ptr
 #include <string>
+#include <optional>                                     //std::optional
 
 namespace libSocket { namespace unx {
 
@@ -24,6 +25,11 @@ namespace libSocket { namespace unx {
 class Address : public libSocket::Address<sockaddr_un>
 {
 public:
+    /**
+     * @brief   Default constructor.
+     */
+    Address() : libSocket::Address<sockaddr_un>() {};
+
     /**
      * @brief   Constructor with name
      * @details If the socket name begins with a slash '/', then a 'filesystem' address is created.
@@ -68,8 +74,7 @@ public:
      * @brief   Client constructor. Create a socket with no connection.
      * @details Use this constructor to create a client socket.
      */
-    DatagramSock ()
-        : UnixBase(SOCK_DGRAM) {};
+    DatagramSock ();
 
     /**
      * @brief   Server constructor. Create a socket and bind it to a name.
@@ -78,6 +83,11 @@ public:
     DatagramSock (
         const Address& address                          //!< Socket name to which the socket will be bound.
     );
+
+    /**
+     * @brief   Destructor. Removes the socket from the filesystem, if exists.
+     */
+    ~DatagramSock();
 
     /**
      * @brief   Create a socket connected to this socket.
@@ -89,7 +99,7 @@ public:
 
     /**
      * @brief   Read (dequeue) a datagram from the socket queue.
-     * @details If the 'origin' pointer is provided (i.e. is not null), it will be filled with the address of the message originator.
+     * @details If the 'origin' argument is provided, it will be filled with the address of the message originator.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
      *          std::system_error if any error occurs while receiving data.
      * @note    If the input queue is empty, this function will block waiting for data.
@@ -98,12 +108,12 @@ public:
     readMessage (
         void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
         unsigned buflen,                                //!< Size of the buffer.
-        Address* origin = nullptr                       //!< Pointer to the object to contain the origin address. [= nullptr]
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Pointer to the object to contain the origin address. [= nullptr]
     );
 
     /**
      * @brief   Send a message to a listening socket
-     * @details If the socket is connected, the destination address is ignored and can be null.
+     * @details If the socket is connected, the destination address is ignored and can be absent.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
      *          std::system_error if any error occurs while sending data.
      */
@@ -111,7 +121,7 @@ public:
     writeMessage (
         const void* buffer,                             //!< Pointer to the message to send.
         unsigned buflen,                                //!< Size of the message.
-        Address* dest                                   //!< Destination address, or nullptr for connected sockets.
+        std::optional<std::reference_wrapper<Address>> dest = std::nullopt      //!< Destination address. Ignored (may be absent) on connected sockets.
     );
 
     /**

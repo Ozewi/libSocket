@@ -14,8 +14,9 @@
 #include "socket_base.h"
 #include <netinet/in.h>                                 // sockaddr_in, in_addr_t
 #include <string>
-#include <stdexcept>
+#include <stdexcept>                                    // Standard exceptions
 #include <memory>                                       // std::shared_ptr
+#include <optional>                                     // std::optional
 
 namespace libSocket { namespace inet {
 
@@ -25,6 +26,11 @@ namespace libSocket { namespace inet {
 class Address : public libSocket::Address<sockaddr_in>
 {
 public:
+    /**
+     * @brief   Default constructor.
+     */
+    Address() : libSocket::Address<sockaddr_in>() {};
+
     /**
      * @brief   Constructor with integers
      * @details 'addr' can be set to an address and to the special values INADDR_ANY and INADDR_BROADCAST.
@@ -126,7 +132,7 @@ public:
 
     /**
      * @brief   Read (dequeue) a datagram from the socket queue.
-     * @details If the 'origin' pointer is provided (i.e. is not null), it will be filled with the address of the message originator.
+     * @details If the 'origin' argument is provided, it will be filled with the address of the message originator.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
      *          std::system_error if any error occurs while receiving data.
      * @note    If the input queue is empty, this function will block waiting for data.
@@ -135,12 +141,12 @@ public:
     readMessage (
         void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
         unsigned buflen,                                //!< Size of the buffer.
-        Address* origin = nullptr                       //!< Pointer to the object to contain the origin address. [= nullptr]
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Object to contain the origin address. [= none]
     );
 
     /**
      * @brief   Get a datagram without dequeuing it.
-     * @details If the 'origin' pointer is provided (i.e. is not null), it will be filled with the address of the message originator.
+     * @details If the 'origin' argument is provided, it will be filled with the address of the message originator.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
      *          std::system_error if any error occurs while receiving data.
      * @note    If the input queue is empty, this function will block waiting for data.
@@ -149,12 +155,12 @@ public:
     peekMessage (
         void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
         unsigned buflen,                                //!< Size of the buffer.
-        Address* origin = nullptr                       //!< Pointer to the object to contain the origin address. [= nullptr]
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Object to contain the origin address. [= none]
     );
 
     /**
      * @brief   Write (enqueue) a message to send it to a remote endpoint.
-     * @details If the socket is connected, the destination address is ignored and can be null.
+     * @details If the socket is connected, the destination address is ignored and can be absent.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
      *          std::system_error if any error occurs while sending data.
      */
@@ -162,7 +168,7 @@ public:
     writeMessage (
         const void* buffer,                             //!< Pointer to the message to send.
         unsigned buflen,                                //!< Size of the message.
-        Address* dest                                   //!< Destination address, or nullptr for connected sockets.
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Destination address. Ignored (may be absent) on connected sockets.
     );
 
     /**
@@ -187,7 +193,7 @@ protected:
         void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
         unsigned buflen,                                //!< Size of the buffer.
         int flags = 0,                                  //!< Reading flags [= 0]. @see recvfrom
-        Address* origin = nullptr                       //!< Pointer to the object to contain the origin address. [= nullptr]
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Object to contain the origin address. [= none]
     );
 };
 

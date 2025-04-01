@@ -79,7 +79,8 @@ void client()
     // prompt();
     log("about to send something");
 
-    try {
+    try
+    {
         auto wrote = cli.write("Writing something");
         log("Data sent ---");
         std::cout << "   wrote: " << wrote << " bytes\n";
@@ -95,7 +96,7 @@ void client()
     }
     catch (const std::exception& e)
     {
-        std::cout << "Something was wrong ...\n" << e.what() << std::endl;
+        std::cerr << "Something was wrong ...\n" << e.what() << std::endl;
     }
     // prompt();
 }

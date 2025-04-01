@@ -26,7 +26,7 @@ using namespace std::string_literals;
  * ------ */
 
 /**
- * @brief   Constructor with integers
+ * @brief     Constructor with integers
  */
 Address::Address (in_addr_t addr, in_port_t port)
 {
@@ -37,7 +37,7 @@ Address::Address (in_addr_t addr, in_port_t port)
 }
 
 /**
- * @brief   Constructor with name resolver
+ * @brief     Constructor with name resolver
  */
 Address::Address (const std::string& addr, in_port_t port)
 {
@@ -127,9 +127,9 @@ DatagramSock::DatagramSock (const Address& address)
 }
 
 /**
- * @brief   Read (dequeue) a datagram from the socket queue.
+ * @brief     Read (dequeue) a datagram from the socket queue.
  */
-int DatagramSock::readMessage(void* buffer, unsigned buflen, Address* origin)
+int DatagramSock::readMessage(void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> origin)
 {
     return getMessage(buffer, buflen, 0, origin);
 }
@@ -137,15 +137,15 @@ int DatagramSock::readMessage(void* buffer, unsigned buflen, Address* origin)
 /**
  * @brief     Get a message without dequeuing it.
  */
-int DatagramSock::peekMessage (void* buffer, unsigned buflen, Address* origin)
+int DatagramSock::peekMessage (void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> origin)
 {
     return getMessage(buffer, buflen, MSG_PEEK, origin);
 }
 
 /**
- * @brief   Write (enqueue) a message to send it to a remote endpoint.
+ * @brief     Write (enqueue) a message to send it to a remote endpoint.
  */
-void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* dest)
+void DatagramSock::writeMessage (const void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> dest)
 {
     if (buffer == nullptr || buflen == 0)
         throw std::invalid_argument("DatagramSock::writeMessage: 'buffer' is null or 'buflen' is 0.");
@@ -153,10 +153,10 @@ void DatagramSock::writeMessage (const void* buffer, unsigned buflen, Address* d
         THROW_SYSTEM_ERROR("Invalid socket handler");
 
     int result;
-    if (dest == nullptr)
-        result = sendto(hsock_, buffer, buflen, 0, nullptr, 0);
+    if (dest.has_value())
+        result = sendto(hsock_, buffer, buflen, 0, dest->get(), dest->get().size());
     else
-        result = sendto(hsock_, buffer, buflen, 0, *dest, dest->size());
+        result = sendto(hsock_, buffer, buflen, 0, nullptr, 0);
 
     if (result < 0)
         throw std::system_error(errno, std::generic_category(), "DatagramSock::writeMessage: sendto");
@@ -176,7 +176,7 @@ void DatagramSock::connect(const Address& addr)
 /**
  * @brief     Get a datagram from the queue.
  */
-int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, Address* origin)
+int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, std::optional<std::reference_wrapper<Address>> origin)
 {
     if (buffer == nullptr || buflen == 0)
         throw std::invalid_argument("DatagramSock::getMessage: 'buffer' is null or 'buflen' is 0.");
@@ -184,13 +184,13 @@ int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, Address* 
         THROW_SYSTEM_ERROR("Invalid socket handler");
 
     int msg_len;
-    if (origin == nullptr)
-        msg_len = recvfrom(hsock_, buffer, buflen, flags, nullptr, nullptr);
-    else
+    if (origin.has_value())
     {
-        socklen_t orig_size = origin->size();
-        msg_len = recvfrom(hsock_, buffer, buflen, flags, *origin, &orig_size);
+        socklen_t orig_size = origin->get().size();
+        msg_len = recvfrom(hsock_, buffer, buflen, flags, origin->get(), &orig_size);
     }
+    else
+        msg_len = recvfrom(hsock_, buffer, buflen, flags, nullptr, nullptr);
     if (msg_len < 0)
         THROW_SYSTEM_ERROR("recvfrom()");
     return msg_len;
@@ -281,7 +281,7 @@ BroadcastSock::BroadcastSock()
  */
 void BroadcastSock::writeMessage (const void* buffer, unsigned buflen)
 {
-    DatagramSock::writeMessage(buffer, buflen, nullptr);
+    DatagramSock::writeMessage(buffer, buflen);
 }
 
 /** ----------------------------------------------------
@@ -358,8 +358,8 @@ StreamClientSock::StreamClientSock (const Address& addr)
 }
 
 /**
- * @brief   Connect the socket to a remote server
- * @throws  std::system_error
+ * @brief     Connect the socket to a remote server
+ * @throws    std::system_error
  */
 void StreamClientSock::connect (const Address& addr)
 {

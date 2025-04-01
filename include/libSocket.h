@@ -22,6 +22,7 @@ namespace libSocket {
  * @brief   Library version identifier
  */
 const char* version();
-}
+
+}   // namespace
 
 #endif // _LIBSOCKET_H_
