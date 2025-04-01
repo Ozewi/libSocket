@@ -11,7 +11,7 @@ char prompt(const char* menu = 0, const char* options = 0)
         if (menu)
             std::cout << menu << ": ";
         else
-            printf("Press Enter to continue...");
+            std::cout << "Press Enter to continue...";
         int key = getchar();
         if (!options)
             return key;
@@ -41,7 +41,7 @@ void server()
         prompt();
 
         auto accept = srv.getConnection(10000);     // 10 seconds timeout
-        if (accept != nullptr)
+        if (accept.has_value())
         {
             log("Got connection");
             while (accept->waitData(100) > 0)

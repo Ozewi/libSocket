@@ -253,25 +253,25 @@ void StreamServerSock::setListen (int backlog)
 /**
  * @brief     Get a connection with a client.
  */
-std::shared_ptr<StreamSock> StreamServerSock::getConnection (int timeout, Address* origin)
+std::optional<StreamSock> StreamServerSock::getConnection (int timeout, std::optional<std::reference_wrapper<Address>> origin)
 {
     if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
         THROW_SYSTEM_ERROR("Invalid socket handler");
     if (waitData(timeout) > 0)                          // Got something
     {
         HandleSocket haccept;
-        if (origin == nullptr)
-            haccept.hf = accept(hsock_, nullptr, nullptr);
-        else
+        if (origin.has_value())
         {
-            socklen_t orig_size = origin->size();
-            haccept.hf = accept(hsock_, *origin, &orig_size);
+            socklen_t orig_size = origin->get().size();
+            haccept.hf = accept(hsock_, origin->get(), &orig_size);
         }
+        else
+            haccept.hf = accept(hsock_, nullptr, nullptr);
         if (haccept.hf < 0)
             THROW_SYSTEM_ERROR("accept()");
-        return std::shared_ptr<StreamSock>(new StreamSock(haccept));
+        return StreamSock(haccept);
     }
-    return nullptr;
+    return std::nullopt;
 }
 
 } } // namespaces

@@ -108,7 +108,7 @@ public:
     readMessage (
         void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
         unsigned buflen,                                //!< Size of the buffer.
-        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Pointer to the object to contain the origin address. [= nullptr]
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Pointer to the object to contain the origin address. [= none]
     );
 
     /**
@@ -248,10 +248,10 @@ public:
      *          If timeout is WAIT_DATA_FOREVER, it waits forever for an incoming connection.
      * @throws  std::system_error
      */
-    std::shared_ptr<StreamSock>                         /** @return New socket connected to the remote endpoint. */
+    std::optional<StreamSock>                           /** @return Socket connected to the remote endpoint, or none. */
     getConnection (
         int timeout = WAIT_DATA_FOREVER,                //!< Max time waiting for a connection, DONT_WAIT or WAIT_DATA_FOREVER [ = wait forever ]
-        Address* origin = nullptr                       //!< Address of the connection originator, or nullptr for discarding it [ = discard ]
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Pointer to the object to contain the origin address. [= none]
     );
 
 protected:
