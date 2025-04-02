@@ -4,7 +4,7 @@
  * @author    José Luis Sánchez Arroyo
  * @section   License
  * Copyright (c) 1998-2025 José Luis Sánchez Arroyo
- * This software is distributed under the terms of the LGPL version 2.1 and comes WITHOUT ANY WARRANTY.
+ * This software is distributed under the terms of the BSD 3-Clause License and comes WITHOUT ANY WARRANTY.
  * Please read the file LICENSE for further details.
  */
 
