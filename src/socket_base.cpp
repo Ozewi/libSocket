@@ -42,73 +42,6 @@ SocketBase::~SocketBase ()
 }
 
 /**
- * @brief     Read data from the socket
- */
-int SocketBase::read(void* buffer, int bytes, int timeout)
-{
-    if (buffer == nullptr || bytes <= 0)
-        THROW_INVALID_ARGUMENT("'buffer' is null or 'bytes' is 0");
-    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-        THROW_SYSTEM_ERROR("Invalid socket handler");;
-
-    int lesen = 0;
-
-    if (timeout == DONT_WAIT)                           // don't wait: read as much as you can and exit
-        lesen = recv(hsock_, buffer, bytes, MSG_NOSIGNAL | MSG_DONTWAIT);
-    else if (timeout == WAIT_DATA_FOREVER)              // wait until all data is received
-        lesen = recv(hsock_, buffer, bytes, MSG_NOSIGNAL | MSG_WAITALL);
-    else                                                // Regular timeout
-    {
-        fd_set socklist;
-        timeval tm = { .tv_sec = timeout / 1000, .tv_usec = (timeout - (tm.tv_sec * 1000)) * 1000 };
-
-        while (lesen < bytes && tm.tv_sec + tm.tv_usec > 0)
-        {
-            if (!pending())                             // If there's no pending data, let's wait
-            {
-                FD_ZERO(&socklist);
-                FD_SET(hsock_, &socklist);
-                auto result = select(hsock_+1, &socklist, 0, 0, &tm);   // Linux-specific: 'select' updates the timeval struct.
-                if (result == 0)                        // Timeout -- terminate the loop.
-                    break;
-                if (result < 0)                         // Error
-                {
-                    if (errno == EINTR)                 // Interrupted by a signal: continue.
-                        continue;
-                    THROW_SYSTEM_ERROR("select()");
-                }
-            }
-            int err = recv(hsock_, reinterpret_cast<char*>(buffer) + lesen, bytes - lesen, MSG_NOSIGNAL);
-            if (err < 0)
-                THROW_SYSTEM_ERROR("recv()");
-            if (err == 0)                               // EOF -- socket was probably closed on the other end
-                break;
-            lesen += err;
-        }
-    }
-    return lesen;
-}
-
-/**
- * @brief     Write data to the socket.
- */
-int SocketBase::write(const void* buffer, int bytes, WriteModes writeMode)
-{
-    if (buffer == nullptr || bytes <= 0)
-        THROW_INVALID_ARGUMENT("'buffer' is null or 'bytes' is 0");
-    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-        THROW_SYSTEM_ERROR("Invalid socket handler");;
-
-    int flags = MSG_NOSIGNAL;
-    if (writeMode == WRITE_DONT_WAIT)
-        flags |= MSG_DONTWAIT;
-    auto bytes_sent = send(hsock_, buffer, bytes, flags);
-    if (bytes_sent < 0)                                 // negative result indicates an error
-        THROW_SYSTEM_ERROR("send()");
-    return bytes_sent;
-}
-
-/**
  * @brief     Close the socket.
  */
 void SocketBase::close()
@@ -219,6 +152,102 @@ SocketBase::SocketBase (int family, int type, int protocol)
 {
     if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
         THROW_SYSTEM_ERROR("Invalid socket handler");
+}
+
+/**
+ * @brief     Read data from the socket
+ */
+int SocketBase::read(void* buffer, int bytes, int timeout)
+{
+    if (buffer == nullptr || bytes <= 0)
+        THROW_INVALID_ARGUMENT("'buffer' is null or 'bytes' is 0");
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");;
+
+    int lesen = 0;
+
+    if (timeout == DONT_WAIT)                           // don't wait: read as much as you can and exit
+        lesen = recv(hsock_, buffer, bytes, MSG_NOSIGNAL | MSG_DONTWAIT);
+    else if (timeout == WAIT_DATA_FOREVER)              // wait until all data is received
+        lesen = recv(hsock_, buffer, bytes, MSG_NOSIGNAL | MSG_WAITALL);
+    else                                                // Regular timeout
+    {
+        fd_set socklist;
+        timeval tm = { .tv_sec = timeout / 1000, .tv_usec = (timeout - (tm.tv_sec * 1000)) * 1000 };
+
+        while (lesen < bytes && tm.tv_sec + tm.tv_usec > 0)
+        {
+            if (!pending())                             // If there's no pending data, let's wait
+            {
+                FD_ZERO(&socklist);
+                FD_SET(hsock_, &socklist);
+                auto result = select(hsock_+1, &socklist, 0, 0, &tm);   // Linux-specific: 'select' updates the timeval struct.
+                if (result == 0)                        // Timeout -- terminate the loop.
+                    break;
+                if (result < 0)                         // Error
+                {
+                    if (errno == EINTR)                 // Interrupted by a signal: continue.
+                        continue;
+                    THROW_SYSTEM_ERROR("select()");
+                }
+            }
+            int err = recv(hsock_, reinterpret_cast<char*>(buffer) + lesen, bytes - lesen, MSG_NOSIGNAL);
+            if (err < 0)
+                THROW_SYSTEM_ERROR("recv()");
+            if (err == 0)                               // EOF -- socket was probably closed on the other end
+                break;
+            lesen += err;
+        }
+    }
+    return lesen;
+}
+
+/**
+ * @brief     Write data to the socket.
+ */
+int SocketBase::write(const void* buffer, int bytes, WriteModes writeMode)
+{
+    if (buffer == nullptr || bytes <= 0)
+        THROW_INVALID_ARGUMENT("'buffer' is null or 'bytes' is 0");
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");;
+
+    int flags = MSG_NOSIGNAL;
+    if (writeMode == WRITE_DONT_WAIT)
+        flags |= MSG_DONTWAIT;
+    auto bytes_sent = send(hsock_, buffer, bytes, flags);
+    if (bytes_sent < 0)                                 // negative result indicates an error
+        THROW_SYSTEM_ERROR("send()");
+    return bytes_sent;
+}
+
+/**
+ * @brief     Get a datagram from the queue.
+ */
+int SocketBase::readDatagram(void* buffer, unsigned buflen, int flags, sockaddr* origin, socklen_t orig_size)
+{
+    if (buffer == nullptr || buflen == 0)
+        THROW_INVALID_ARGUMENT("'buffer' is null or 'buflen' is 0.");
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
+
+    int msg_len = recvfrom(hsock_, buffer, buflen, flags, origin, &orig_size);
+    if (msg_len < 0)
+        THROW_SYSTEM_ERROR("recvfrom()");
+    return msg_len;
+}
+
+/**
+ * @brief     Write (enqueue) a datagram to send it to a remote endpoint.
+ */
+void SocketBase::writeDatagram(const void* buffer, unsigned buflen, const sockaddr* dest, int dest_size)
+{
+    if (buffer == nullptr || buflen == 0)
+        THROW_INVALID_ARGUMENT("'buffer' is null or 'buflen' is 0.");
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
+    if (sendto(hsock_, buffer, buflen, 0, dest, dest_size) < 0)
+        THROW_SYSTEM_ERROR("sendto()");
 }
 
 /**

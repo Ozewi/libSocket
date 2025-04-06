@@ -112,6 +112,20 @@ public:
     );
 
     /**
+     * @brief   Get a datagram without dequeuing it.
+     * @details If the 'origin' argument is provided, it will be filled with the address of the message originator.
+     * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
+     *          std::system_error if any error occurs while receiving data.
+     * @note    If the input queue is empty, this function will block waiting for data.
+     */
+    int                                                 /** @return Message size. */
+    peekMessage (
+        void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
+        unsigned buflen,                                //!< Size of the buffer.
+        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Object to contain the origin address. [= none]
+    );
+
+    /**
      * @brief   Send a message to a listening socket
      * @details If the socket is connected, the destination address is ignored and can be absent.
      * @throws  std::invalid_argument if the 'buffer' pointer is null or 'buflen' is 0.
@@ -158,6 +172,50 @@ public:
      */
     std::shared_ptr<StreamSock>                         /** @return Socket connected to this socket. */
     createPair ();
+
+    /**
+     * @brief   Read data from the socket.
+     * @details If timeout == DONT_WAIT, the function reads any data pending in the input buffer and returns immediately.
+     *          If timeout == WAIT_DATA_FOREVER, the function waits until all the requested data is received.
+     *          Otherwise, data is read until the buffer is full or time runs out, whichever comes first.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Bytes read. \n 0: Nothing to read. */
+    read (
+        void* buffer,                                   //!< Pointer to the read buffer
+        int max_bytes,                                  //!< Number of bytes to read
+        int timeout = DONT_WAIT                         //!< Reading timeout (in milliseconds). Also @see ReadTimeouts for other values. [ = DONT_WAIT ]
+    )   {
+            return SocketBase::read(buffer, max_bytes, timeout);
+        };
+
+    /**
+     * @brief   Write data to the socket.
+     * @details If there is no room in the system queue for the entire buffer, the function either waits for space (WRITE_WAIT_QUEUED) or
+     *          writes only enough to fill the buffer (WRITE_DONT_WAIT). In both cases, the return value is the number of bytes written.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Number of bytes sent. */
+    write (
+        const void* buffer,                             //!< Write buffer
+        int buf_len,                                    //!< Length of the write buffer
+        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
+    )   {
+            return SocketBase::write(buffer, buf_len, write_mode);
+        };
+
+    /**
+     * @brief   Write data to the socket.
+     * @details Simplified version using std::string. @see write
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Number of bytes sent. */
+    write (
+        const std::string& buffer,                      //!< Write buffer
+        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
+    )   {
+            return SocketBase::write(buffer.c_str(), buffer.size() + 1, write_mode);
+        };
 
 protected:
 

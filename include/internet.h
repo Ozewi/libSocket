@@ -180,20 +180,6 @@ public:
     connect (
         const Address& addr                             //!< Endpoint to connect to.
     );
-
-protected:
-    /**
-     * @brief   Get a datagram from the queue.
-     * @details Function called by other specialized functions of the class.
-     * @throws  std::system_error
-     */
-    int                                                 /** @return Message size. */
-    getMessage (
-        void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
-        unsigned buflen,                                //!< Size of the buffer.
-        int flags = 0,                                  //!< Reading flags [= 0]. @see recvfrom
-        std::optional<std::reference_wrapper<Address>> origin = std::nullopt    //!< Object to contain the origin address. [= none]
-    );
 };
 
 /** ----------------------------------------------------
@@ -275,6 +261,50 @@ public:
 class StreamSock : public InetBase
 {
 public:
+    /**
+     * @brief   Read data from the socket.
+     * @details If timeout == DONT_WAIT, the function reads any data pending in the input buffer and returns immediately.
+     *          If timeout == WAIT_DATA_FOREVER, the function waits until all the requested data is received.
+     *          Otherwise, data is read until the buffer is full or time runs out, whichever comes first.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Bytes read. \n 0: Nothing to read. */
+    read (
+        void* buffer,                                   //!< Pointer to the read buffer
+        int max_bytes,                                  //!< Number of bytes to read
+        int timeout = DONT_WAIT                         //!< Reading timeout (in milliseconds). Also @see ReadTimeouts for other values. [ = DONT_WAIT ]
+    )   {
+            return SocketBase::read(buffer, max_bytes, timeout);
+        };
+
+    /**
+     * @brief   Write data to the socket.
+     * @details If there is no room in the system queue for the entire buffer, the function either waits for space (WRITE_WAIT_QUEUED) or
+     *          writes only enough to fill the buffer (WRITE_DONT_WAIT). In both cases, the return value is the number of bytes written.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Number of bytes sent. */
+    write (
+        const void* buffer,                             //!< Write buffer
+        int buf_len,                                    //!< Length of the write buffer
+        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
+    )   {
+            return SocketBase::write(buffer, buf_len, write_mode);
+        };
+
+    /**
+     * @brief   Write data to the socket.
+     * @details Simplified version using std::string. @see write
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Number of bytes sent. */
+    write (
+        const std::string& buffer,                      //!< Write buffer
+        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
+    )   {
+            return SocketBase::write(buffer.c_str(), buffer.size() + 1, write_mode);
+        };
+
     /**
      * @brief   Configure the automatic send of keep-alive packets
      * @details The system sends periodic keep-alive messages to the other end to know if it is still connected.

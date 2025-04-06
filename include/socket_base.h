@@ -158,46 +158,6 @@ public:
     ~SocketBase ();
 
     /**
-     * @brief   Read data from the socket.
-     * @details If timeout == DONT_WAIT, the function reads any data pending in the input buffer and returns immediately.
-     *          If timeout == WAIT_DATA_FOREVER, the function waits until all the requested data is received.
-     *          Otherwise, data is read until the buffer is full or time runs out, whichever comes first.
-     * @throws  std::invalid_argument, std::system_error
-     */
-    int                                                 /** @return Bytes read. \n 0: Nothing to read. */
-    read (
-        void* buffer,                                   //!< Pointer to the read buffer
-        int max_bytes,                                  //!< Number of bytes to read
-        int timeout = DONT_WAIT                         //!< Reading timeout (in milliseconds). Also @see ReadTimeouts for other values. [ = DONT_WAIT ]
-    );
-
-    /**
-     * @brief   Write data to the socket.
-     * @details If there is no room in the system queue for the entire buffer, the function either waits for space (WRITE_WAIT_QUEUED) or
-     *          writes only enough to fill the buffer (WRITE_DONT_WAIT). In both cases, the return value is the number of bytes written.
-     * @throws  std::invalid_argument, std::system_error
-     */
-    int                                                 /** @return Number of bytes sent. */
-    write (
-        const void* buffer,                             //!< Write buffer
-        int buf_len,                                    //!< Length of the write buffer
-        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
-    );
-
-    /**
-     * @brief   Write data to the socket.
-     * @details Simplified version using std::string. @see write
-     * @throws  std::invalid_argument, std::system_error
-     */
-    int                                                 /** @return Number of bytes sent. */
-    write (
-        const std::string& buffer,                      //!< Write buffer
-        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
-    )   {
-            return write(buffer.c_str(), buffer.size() + 1, write_mode);
-        };
-
-    /**
      * @brief   Close the socket.
      * @details A common pattern of network servers is to listen for incoming connections and fork a child to attend them.
      *          In these patterns, the child process must call close() on the listening socket so that the destructor does not shut it down.
@@ -291,6 +251,60 @@ protected:
         int family,                                     //!< Socket family: PF_INET, PF_UNIX, ...
         int type,                                       //!< Socket type: SOCK_STREAM, SOCK_DGRAM, ...
         int protocol = 0                                //!< Socket protocol (usually 0)
+    );
+
+    /**
+     * @brief   Read data from the socket.
+     * @details If timeout == DONT_WAIT, the function reads any data pending in the input buffer and returns immediately.
+     *          If timeout == WAIT_DATA_FOREVER, the function waits until all the requested data is received.
+     *          Otherwise, data is read until the buffer is full or time runs out, whichever comes first.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Bytes read. \n 0: Nothing to read. */
+    read (
+        void* buffer,                                   //!< Pointer to the read buffer
+        int max_bytes,                                  //!< Number of bytes to read
+        int timeout = DONT_WAIT                         //!< Reading timeout (in milliseconds). Also @see ReadTimeouts for other values. [ = DONT_WAIT ]
+    );
+
+    /**
+     * @brief   Write data to the socket.
+     * @details If there is no room in the system queue for the entire buffer, the function either waits for space (WRITE_WAIT_QUEUED) or
+     *          writes only enough to fill the buffer (WRITE_DONT_WAIT). In both cases, the return value is the number of bytes written.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Number of bytes sent. */
+    write (
+        const void* buffer,                             //!< Write buffer
+        int buf_len,                                    //!< Length of the write buffer
+        WriteModes write_mode = WRITE_DONT_WAIT         //!< Waiting mode [ = don't wait ] - @see WriteModes
+    );
+
+    /**
+     * @brief   Get a datagram from the queue.
+     * @details Protected function. Intended to be called by wrappers in derived classes.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    int                                                 /** @return Message size. */
+    readDatagram (
+        void* buffer,                                   //!< Pointer to the buffer that will contain the datagram.
+        unsigned buflen,                                //!< Size of the buffer.
+        int flags,                                      //!< Reading flags. @see recvfrom
+        sockaddr* origin,                               //!< Pointer to the object to contain the address.
+        socklen_t orig_size                             //!< Size of the buffer for the address.
+    );
+
+    /**
+     * @brief   Write (enqueue) a datagram to send it to a remote endpoint.
+     * @details Protected function. Intended to be called by wrappers in derived classes.
+     * @throws  std::invalid_argument, std::system_error
+     */
+    void
+    writeDatagram (
+        const void* buffer,                             //!< Pointer to the message to send.
+        unsigned buflen,                                //!< Size of the message.
+        const sockaddr* dest,                           //!< Destination address.
+        int dest_size                                   //!< Length of the destination address.
     );
 
     /**

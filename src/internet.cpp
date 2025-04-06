@@ -131,7 +131,10 @@ DatagramSock::DatagramSock (const Address& address)
  */
 int DatagramSock::readMessage(void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> origin)
 {
-    return getMessage(buffer, buflen, 0, origin);
+    sockaddr* orig = nullptr;
+    if (origin.has_value())
+        orig = origin->get();
+    return readDatagram(buffer, buflen, 0, orig, (orig? origin->get().size() : 0) );
 }
 
 /**
@@ -139,7 +142,10 @@ int DatagramSock::readMessage(void* buffer, unsigned buflen, std::optional<std::
  */
 int DatagramSock::peekMessage (void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> origin)
 {
-    return getMessage(buffer, buflen, MSG_PEEK, origin);
+    sockaddr* orig = nullptr;
+    if (origin.has_value())
+        orig = origin->get();
+    return readDatagram(buffer, buflen, MSG_PEEK, orig, (orig? origin->get().size() : 0) );
 }
 
 /**
@@ -147,19 +153,10 @@ int DatagramSock::peekMessage (void* buffer, unsigned buflen, std::optional<std:
  */
 void DatagramSock::writeMessage (const void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> dest)
 {
-    if (buffer == nullptr || buflen == 0)
-        throw std::invalid_argument("DatagramSock::writeMessage: 'buffer' is null or 'buflen' is 0.");
-    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-        THROW_SYSTEM_ERROR("Invalid socket handler");
-
-    int result;
+    sockaddr* to = nullptr;
     if (dest.has_value())
-        result = sendto(hsock_, buffer, buflen, 0, dest->get(), dest->get().size());
-    else
-        result = sendto(hsock_, buffer, buflen, 0, nullptr, 0);
-
-    if (result < 0)
-        throw std::system_error(errno, std::generic_category(), "DatagramSock::writeMessage: sendto");
+        to = dest->get();
+    return writeDatagram(buffer, buflen, to, (to? dest->get().size() : 0) );
 }
 
 /**
@@ -171,29 +168,6 @@ void DatagramSock::connect(const Address& addr)
         THROW_SYSTEM_ERROR("Invalid socket handler");
     if (::connect(hsock_, addr, addr.size()) < 0)
         THROW_SYSTEM_ERROR("connect()");
-}
-
-/**
- * @brief     Get a datagram from the queue.
- */
-int DatagramSock::getMessage(void* buffer, unsigned buflen, int flags, std::optional<std::reference_wrapper<Address>> origin)
-{
-    if (buffer == nullptr || buflen == 0)
-        throw std::invalid_argument("DatagramSock::getMessage: 'buffer' is null or 'buflen' is 0.");
-    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-        THROW_SYSTEM_ERROR("Invalid socket handler");
-
-    int msg_len;
-    if (origin.has_value())
-    {
-        socklen_t orig_size = origin->get().size();
-        msg_len = recvfrom(hsock_, buffer, buflen, flags, origin->get(), &orig_size);
-    }
-    else
-        msg_len = recvfrom(hsock_, buffer, buflen, flags, nullptr, nullptr);
-    if (msg_len < 0)
-        THROW_SYSTEM_ERROR("recvfrom()");
-    return msg_len;
 }
 
 /** ----------------------------------------------------

@@ -99,26 +99,25 @@ std::shared_ptr<DatagramSock> DatagramSock::createPair()
 }
 
 /**
- * @brief     Read a datagram from the queue.
+ * @brief     Read (dequeue) a datagram from the socket queue.
  */
 int DatagramSock::readMessage(void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> origin)
 {
-    if (buffer == nullptr || buflen == 0)
-        THROW_INVALID_ARGUMENT("'buffer' is null or 'buflen' is 0.");
-    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-        THROW_SYSTEM_ERROR("Invalid socket handler");
-
-    int msg_len;
+    sockaddr* orig = nullptr;
     if (origin.has_value())
-    {
-        socklen_t orig_size = origin->get().size();
-        msg_len = recvfrom(hsock_, buffer, buflen, 0, origin->get(), &orig_size);
-    }
-    else
-        msg_len = recvfrom(hsock_, buffer, buflen, 0, nullptr, nullptr);
-    if (msg_len < 0)
-        THROW_SYSTEM_ERROR("recvfrom()");
-    return msg_len;
+        orig = origin->get();
+    return readDatagram(buffer, buflen, 0, orig, (orig? origin->get().size() : 0) );
+}
+
+/**
+ * @brief     Get a message without dequeuing it.
+ */
+int DatagramSock::peekMessage (void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> origin)
+{
+    sockaddr* orig = nullptr;
+    if (origin.has_value())
+        orig = origin->get();
+    return readDatagram(buffer, buflen, MSG_PEEK, orig, (orig? origin->get().size() : 0) );
 }
 
 /**
@@ -126,19 +125,10 @@ int DatagramSock::readMessage(void* buffer, unsigned buflen, std::optional<std::
  */
 void DatagramSock::writeMessage (const void* buffer, unsigned buflen, std::optional<std::reference_wrapper<Address>> dest)
 {
-    if (buffer == nullptr || buflen == 0)
-        THROW_INVALID_ARGUMENT("'buffer' is null or 'buflen' is 0.");
-    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-        THROW_SYSTEM_ERROR("Invalid socket handler");
-
-    int result;
+    sockaddr* to = nullptr;
     if (dest.has_value())
-        result = sendto(hsock_, buffer, buflen, 0, dest->get(), dest->get().size());
-    else
-        result = sendto(hsock_, buffer, buflen, 0, nullptr, 0);
-
-    if (result < 0)
-        THROW_SYSTEM_ERROR("sendto()");
+        to = dest->get();
+    return writeDatagram(buffer, buflen, to, (to? dest->get().size() : 0) );
 }
 
 /**
