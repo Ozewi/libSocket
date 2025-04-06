@@ -291,11 +291,7 @@ protected:
         int family,                                     //!< Socket family: PF_INET, PF_UNIX, ...
         int type,                                       //!< Socket type: SOCK_STREAM, SOCK_DGRAM, ...
         int protocol = 0                                //!< Socket protocol (usually 0)
-    )   : hsock_(socket(family, type, protocol)), inode_(getInode())
-        {
-            if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
-                THROW_SYSTEM_ERROR("Invalid socket handler");
-        };
+    );
 
     /**
      * @brief   Close and shutdown the socket.

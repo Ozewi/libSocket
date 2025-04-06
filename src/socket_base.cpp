@@ -212,6 +212,16 @@ void SocketBase::setIomode(IoModes iomode)
 }
 
 /**
+ * @brief     Constructor with family and protocol.
+ */
+SocketBase::SocketBase (int family, int type, int protocol)
+    : hsock_(socket(family, type, protocol)), inode_(getInode())
+{
+    if (hsock_ == INVALID_HANDLER || inode_ == INVALID_INODE)
+        THROW_SYSTEM_ERROR("Invalid socket handler");
+}
+
+/**
  * @brief     Close and shutdown the socket.
  */
 void SocketBase::terminate()
